@@ -1,4 +1,5 @@
 from typing import List
+import os
 import numpy as np
 
 
@@ -26,6 +27,24 @@ class PDF:
         return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
 
     
+    def save_gr_file(self, path: str):
+        if os.path.exists(path):
+            print("Die Datei existiert bereits.")
+            while True:
+                overwrite = input("Die Datei überschreiben? (y/n): ")
+                if overwrite.lower() == "y":
+                    os.remove(path)
+                    break
+                elif overwrite.lower() == "n":
+                    return
+                else:
+                    print("Eingabe konnte nicht verstanden werden.")
+                    continue
+        
+        with open(path, "a") as f:
+            for x, y in zip(self.r, self.g):
+                f.write(f"{x} {y}\n")
+
     @staticmethod
     def differential_pdf(pdf1, pdf2):
         if pdf1.r == pdf2.r:
