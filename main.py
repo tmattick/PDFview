@@ -34,3 +34,19 @@ class PDF:
         else:
             raise XAxisException(pdf1.r, pdf2.r)
     
+
+    @staticmethod
+    def read_gr_file(path):
+        with open(path, "r") as f:
+            lines = f.readlines()
+        
+        r = []
+        g = []
+        
+        for line in lines[29:]:
+            x, y = line.split(" ")
+            r.append(float(x))
+            g.append(float(y))
+        
+        return PDF(r, g)
+    
