@@ -23,7 +23,7 @@ class PDF:
     
 
     def __eq__(self, __o: object) -> bool:
-        return self.r == __o.r and self.g == __o.g
+        return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
 
     
     @staticmethod
