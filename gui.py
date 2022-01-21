@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
+from sympy import diff
 from pdf import PDF
 
 sg.theme("SystemDefault")
@@ -23,15 +24,16 @@ def delete_fig(fig_agg):
     fig_agg.get_tk_widget().forget()
     plt.close("all")
 
-    
+
 # PySimpleGUI
 left_layout = [
     [sg.Text("File:"), sg.In(size=(25,1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
     [sg.Listbox(values=pdfs, enable_events=True, size=(40,20), key="-PDF_LIST-")],
-    [sg.Button("Import", key="-IMPORT_BUTTON-")]
+    [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
     ]
 right_layout = [[sg.Canvas(size=(40,40), key="-CANVAS-")]]
 layout = [[sg.Column(left_layout), sg.VSeperator(), sg.Column(right_layout)]]
+
 
 window = sg.Window("PDFview", layout=layout, finalize=True)
 fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
@@ -43,11 +45,12 @@ if __name__ == "__main__":
     while run:
         event, values = window.read()
 
-        # user exits window
         if event == "Exit" or event == sg.WIN_CLOSED:
+            # exit window
             run = False
             break
         elif event == "-IMPORT_BUTTON-":
+            # import new PDF from file
             path = window["-FILE_IN-"].get()
             pdfs.append(PDF.read_gr_file(path))
             window["-PDF_LIST-"].update(pdfs)
@@ -55,5 +58,32 @@ if __name__ == "__main__":
             sub.plot(pdfs[-1].r, pdfs[-1].g)
             
             fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+        elif event == "-DIFF_BUTTON-":
+            # calculate differential PDF
+            diff_layout = [[sg.Listbox(values=pdfs, enable_events=True, size=(20,5), key="-PDF_MINUENDS-"), 
+            sg.Text(" - "), 
+            sg.Listbox(values=pdfs, enable_events=True, size=(20,5), key="-PDF_SUBTRAHENDS-")],
+            [sg.Button("OK", key="-DIFF_BUTTON-")]]
+            diff_window = sg.Window("dPDF", layout=diff_layout)
+            diff_run = True
+            while diff_run:
+                diff_event, diff_values = diff_window.read()
+                if diff_event == "Exit" or diff_event == sg.WIN_CLOSED:
+                    diff_run = False
+                    break
+                elif diff_event == "-DIFF_BUTTON-":
+                    minuend = diff_values["-PDF_MINUENDS-"][0]
+                    subtrahend = diff_values["-PDF_SUBTRAHENDS-"][0]
+                    diff_pdf = PDF.differential_pdf(minuend, subtrahend)
+                    pdfs.append(diff_pdf)
+                    window["-PDF_LIST-"].update(pdfs)
+                    delete_fig(fig_agg)
+                    sub.plot(pdfs[-1].r, pdfs[-1].g)
+                    fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+                    diff_run = False
+                    break
+            
+            diff_window.close()
+
 
     window.close()
