@@ -11,7 +11,7 @@ class XAxisException(Exception):
         super().__init__(self.message)
 
 
-class PDF:
+class PDF():
     def __init__(self, r: List, g: List):
         if isinstance(r, np.array):
             self.r = r
@@ -29,16 +29,16 @@ class PDF:
     
     def save_gr_file(self, path: str):
         if os.path.exists(path):
-            print("Die Datei existiert bereits.")
+            print("The file already exists.")
             while True:
-                overwrite = input("Die Datei überschreiben? (y/n): ")
+                overwrite = input("Overwrite the file? (y/n): ")
                 if overwrite.lower() == "y":
                     os.remove(path)
                     break
                 elif overwrite.lower() == "n":
                     return
                 else:
-                    print("Eingabe konnte nicht verstanden werden.")
+                    print("Input could not be parsed.")
                     continue
         
         with open(path, "a") as f:
@@ -46,7 +46,7 @@ class PDF:
                 f.write(f"{x} {y}\n")
 
     @staticmethod
-    def differential_pdf(pdf1, pdf2):
+    def differential_pdf(pdf1: PDF, pdf2: PDF) -> PDF:
         if pdf1.r == pdf2.r:
             g = pdf1.g - pdf2.g
             return PDF(pdf1.r, g)
@@ -55,7 +55,7 @@ class PDF:
     
 
     @staticmethod
-    def read_gr_file(path):
+    def read_gr_file(path: str) -> PDF:
         with open(path, "r") as f:
             lines = f.readlines()
         
