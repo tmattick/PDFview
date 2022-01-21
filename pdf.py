@@ -93,7 +93,7 @@ class PDF():
         """
         if np.array_equal(pdf1.r, pdf2.r):
             g = pdf1.g - pdf2.g
-            return PDF(pdf1.r, g)
+            return PDF(pdf1.r, g, f"{pdf1} - {pdf2}")
         else:
             raise XAxisException(pdf1.r, pdf2.r)
     
