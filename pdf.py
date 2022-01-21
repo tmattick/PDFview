@@ -47,7 +47,7 @@ class PDF():
 
     @staticmethod
     def differential_pdf(pdf1: PDF, pdf2: PDF) -> PDF:
-        if pdf1.r == pdf2.r:
+        if np.array_equal(pdf1.r, pdf2.r):
             g = pdf1.g - pdf2.g
             return PDF(pdf1.r, g)
         else:
