@@ -22,11 +22,11 @@ class PDF():
     :type name: str, optional
     """
     def __init__(self, r: List, g: List, name:str = "exPDF"):
-        if isinstance(r, np.array):
+        if isinstance(r, np.ndarray):
             self.r = r
         else:
             self.r = np.array(r)
-        if isinstance(r, np.array):
+        if isinstance(r, np.ndarray):
             self.g = g
         else:
             self.g = np.array(g)
@@ -42,6 +42,10 @@ class PDF():
         :rtype: bool
         """
         return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
+
+    
+    def __str__(self) -> str:
+        return self.name
 
 
     def scale(self, factor: float):
@@ -76,7 +80,7 @@ class PDF():
                 f.write(f"{x} {y}\n")
 
     @staticmethod
-    def differential_pdf(pdf1: PDF, pdf2: PDF) -> PDF:
+    def differential_pdf(pdf1, pdf2):
         """Returns the differential PDF of two PDFs with the same r-range. Raises a class:`XAxisExeption`, if the r ranges of the PDFs are not equal.
 
         :param pdf1: the minuend PDF
@@ -95,7 +99,7 @@ class PDF():
     
 
     @staticmethod
-    def read_gr_file(path: str) -> PDF:
+    def read_gr_file(path: str):
         """Reads a PDF from a .gr-file produced by PDFgetX3.
         
         :param path: the path to the .gr-file to read from
