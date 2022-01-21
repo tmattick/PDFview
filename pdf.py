@@ -12,7 +12,7 @@ class XAxisException(Exception):
 
 
 class PDF():
-    def __init__(self, r: List, g: List):
+    def __init__(self, r: List, g: List, name:str = "exPDF"):
         if isinstance(r, np.array):
             self.r = r
         else:
@@ -21,6 +21,7 @@ class PDF():
             self.g = g
         else:
             self.g = np.array(g)
+        self.name = name
     
 
     def __eq__(self, __o: object) -> bool:
@@ -67,5 +68,7 @@ class PDF():
             r.append(float(x))
             g.append(float(y))
         
-        return PDF(r, g)
+        name: str = os.path.basename(path).split(".")[0]
+
+        return PDF(r, g, name)
     
