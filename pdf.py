@@ -12,6 +12,15 @@ class XAxisException(Exception):
 
 
 class PDF():
+    """This is a class representing a pair distribution function (PDF). 
+    
+    :param r: the range of distances in the PDF, commonly given in Angstrom.
+    :type r: List
+    :param g: the values of g(r)
+    :type g: List
+    :param name: the name of the PDF, defaults to "exPDF"
+    :type name: str, optional
+    """
     def __init__(self, r: List, g: List, name:str = "exPDF"):
         if isinstance(r, np.array):
             self.r = r
@@ -25,10 +34,21 @@ class PDF():
     
 
     def __eq__(self, __o: object) -> bool:
+        """Returns whether r and g of the given PDFs are equal
+        
+        :param __o: the PDF to compare to
+        :type __o: object
+        :return: true, if r and g arrays are equal
+        :rtype: bool
+        """
         return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
 
     
     def save_gr_file(self, path: str):
+        """Saves the PDF to a .gr-file after checking if the file already exists. Prompts the user whether to overwrite the existing file if it exists.
+        
+        :param path: The path to save the .gr-file to. Has to contain the file-extension.
+        :type path: str"""
         if os.path.exists(path):
             print("The file already exists.")
             while True:
@@ -48,6 +68,16 @@ class PDF():
 
     @staticmethod
     def differential_pdf(pdf1: PDF, pdf2: PDF) -> PDF:
+        """Returns the differential PDF of two PDFs with the same r-range. Raises a class:`XAxisExeption`, if the r ranges of the PDFs are not equal.
+
+        :param pdf1: the minuend PDF
+        :type pdf1: :class:`PDF`
+        :param pdf2: the subtrahend PDF
+        :type pdf2: :class:`PDF`
+        :return: the differential PDF
+        :rtype: :class:`PDF`
+        :raises XAxisException: if the r ranges of the provided PDFs are not equal
+        """
         if np.array_equal(pdf1.r, pdf2.r):
             g = pdf1.g - pdf2.g
             return PDF(pdf1.r, g)
@@ -57,6 +87,13 @@ class PDF():
 
     @staticmethod
     def read_gr_file(path: str) -> PDF:
+        """Reads a PDF from a .gr-file produced by PDFgetX3.
+        
+        :param path: the path to the .gr-file to read from
+        :type path: str
+        :return: the PDF that is read from the file with name of the file without extension
+        :rtype: :class:`PDF`
+        """
         with open(path, "r") as f:
             lines = f.readlines()
         
