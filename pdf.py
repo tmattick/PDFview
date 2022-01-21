@@ -43,6 +43,15 @@ class PDF():
         """
         return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
 
+
+    def scale(self, factor: float):
+        """Scales the PDF by multiplying g with the factor given.
+        
+        :param factor: the factor with which g is getting multiplied
+        :type factor: float
+        """
+        self.g = self.g * factor
+
     
     def save_gr_file(self, path: str):
         """Saves the PDF to a .gr-file after checking if the file already exists. Prompts the user whether to overwrite the existing file if it exists.
