@@ -11,7 +11,7 @@ class XAxisException(Exception):
         super().__init__(self.message)
 
 
-class PDF():
+class PDF:
     """This is a class representing a pair distribution function (PDF). 
     
     :param r: the range of distances in the PDF, commonly given in Angstrom.
@@ -21,7 +21,8 @@ class PDF():
     :param name: the name of the PDF, defaults to "exPDF"
     :type name: str, optional
     """
-    def __init__(self, r: List, g: List, name:str = "exPDF"):
+
+    def __init__(self, r: List, g: List, name: str = "exPDF"):
         if isinstance(r, np.ndarray):
             self.r = r
         else:
@@ -31,7 +32,7 @@ class PDF():
         else:
             self.g = np.array(g)
         self.name = name
-    
+        self.scaling_factor = 1
 
     def __eq__(self, __o: object) -> bool:
         """Returns whether r and g of the given PDFs are equal
@@ -43,10 +44,8 @@ class PDF():
         """
         return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
 
-    
     def __str__(self) -> str:
         return self.name
-
 
     def scale(self, factor: float):
         """Scales the PDF by multiplying g with the factor given.
@@ -54,11 +53,11 @@ class PDF():
         :param factor: the factor with which g is getting multiplied
         :type factor: float
         """
-        self.g = self.g * factor
+        self.scaling_factor = factor
 
-    
     def save_gr_file(self, path: str):
-        """Saves the PDF to a .gr-file after checking if the file already exists. Prompts the user whether to overwrite the existing file if it exists.
+        """Saves the PDF to a .gr-file after checking if the file already exists. Prompts the user whether to overwrite
+        the existing file if it exists.
         
         :param path: The path to save the .gr-file to. Has to contain the file-extension.
         :type path: str"""
@@ -74,14 +73,15 @@ class PDF():
                 else:
                     print("Input could not be parsed.")
                     continue
-        
+
         with open(path, "a") as f:
             for x, y in zip(self.r, self.g):
                 f.write(f"{x} {y}\n")
 
     @staticmethod
     def differential_pdf(pdf1, pdf2):
-        """Returns the differential PDF of two PDFs with the same r-range. Raises a class:`XAxisExeption`, if the r ranges of the PDFs are not equal.
+        """Returns the differential PDF of two PDFs with the same r-range. Raises a class:`XAxisException`, if the r
+        ranges of the PDFs are not equal.
 
         :param pdf1: the minuend PDF
         :type pdf1: :class:`PDF`
@@ -96,7 +96,6 @@ class PDF():
             return PDF(pdf1.r, g, f"{pdf1} - {pdf2}")
         else:
             raise XAxisException(pdf1.r, pdf2.r)
-    
 
     @staticmethod
     def read_gr_file(path: str):
@@ -109,16 +108,15 @@ class PDF():
         """
         with open(path, "r") as f:
             lines = f.readlines()
-        
+
         r = []
         g = []
-        
+
         for line in lines[29:]:
             x, y = line.split(" ")
             r.append(float(x))
             g.append(float(y))
-        
+
         name: str = os.path.basename(path).split(".")[0]
 
         return PDF(r, g, name)
-    
