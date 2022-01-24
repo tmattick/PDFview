@@ -8,12 +8,12 @@ sg.theme("SystemDefault")
 pdfs = []
 matplotlib.use("TkAgg")
 
-
 # Matplotlib setup
 fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
 sub = fig.add_subplot(111)
 sub.set_xlabel("r")
 sub.set_ylabel("G(r)")
+
 
 def draw_figure(canvas, figure):
     figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
@@ -90,17 +90,20 @@ if __name__ == "__main__":
 
             diff_window.close()
         elif event == "-SCALE_BUTTON-":
-            pdf = values["-PDF_LIST-"][0]
-            pdf.scale(float(values["-SCALE_IN-"][0]))
-            delete_fig(fig_agg)
-            fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-            matplotlib.use("TkAgg")
-            sub = fig.add_subplot(111)
-            sub.set_xlabel("r")
-            sub.set_ylabel("G(r)")
-            for p in pdfs:
-                sub.plot(p.r, p.g * p.scaling_factor)
+            try:
+                pdf = values["-PDF_LIST-"][0]
+                pdf.scale(float(values["-SCALE_IN-"][0]))
+                delete_fig(fig_agg)
+                fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+                matplotlib.use("TkAgg")
+                sub = fig.add_subplot(111)
+                sub.set_xlabel("r")
+                sub.set_ylabel("G(r)")
+                for p in pdfs:
+                    sub.plot(p.r, p.g * p.scaling_factor)
 
-            fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+                fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+            except IndexError as e:
+                sg.popup_error("Choose a PDF to scale.")
 
     window.close()
