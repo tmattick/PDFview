@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
-from pdf import PDF
+from pdf import PDF, XAxisException
 
 sg.theme("SystemDefault")
 pdfs = []
@@ -72,14 +72,17 @@ if __name__ == "__main__":
                 elif diff_event == "-DIFF_BUTTON-":
                     minuend = diff_values["-PDF_MINUENDS-"][0]
                     subtrahend = diff_values["-PDF_SUBTRAHENDS-"][0]
-                    diff_pdf = PDF.differential_pdf(minuend, subtrahend)
-                    pdfs.append(diff_pdf)
-                    window["-PDF_LIST-"].update(pdfs)
-                    delete_fig(fig_agg)
-                    sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
-                    fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
-                    diff_run = False
-                    break
+                    try:
+                        diff_pdf = PDF.differential_pdf(minuend, subtrahend)
+                        pdfs.append(diff_pdf)
+                        window["-PDF_LIST-"].update(pdfs)
+                        delete_fig(fig_agg)
+                        sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
+                        fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+                        diff_run = False
+                        break
+                    except XAxisException as e:
+                        sg.popup_error("The provided PDFs don't share a r axis. dPDF could not be calculated.")
 
             diff_window.close()
 
