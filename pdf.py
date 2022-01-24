@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Union, TypeVar
 import os
 import numpy as np
+import numpy.typing as npt
 
 
 class XAxisException(Exception):
@@ -22,7 +23,7 @@ class PDF:
     :type name: str, optional
     """
 
-    def __init__(self, r: List, g: List, name: str = "exPDF"):
+    def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF"):
         if isinstance(r, np.ndarray):
             self.r = r
         else:
@@ -34,7 +35,7 @@ class PDF:
         self.name = name
         self.scaling_factor = 1
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, __o: 'PDF') -> bool:
         """Returns whether r and g of the given PDFs are equal
         
         :param __o: the PDF to compare to
@@ -79,7 +80,7 @@ class PDF:
                 f.write(f"{x} {y}\n")
 
     @staticmethod
-    def differential_pdf(pdf1, pdf2):
+    def differential_pdf(pdf1: 'PDF', pdf2: 'PDF') -> 'PDF':
         """Returns the differential PDF of two PDFs with the same r-range. Raises a class:`XAxisException`, if the r
         ranges of the PDFs are not equal.
 
