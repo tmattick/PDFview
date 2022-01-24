@@ -6,10 +6,11 @@ from pdf import PDF, XAxisException
 
 sg.theme("SystemDefault")
 pdfs = []
+matplotlib.use("TkAgg")
+
 
 # Matplotlib setup
 fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-matplotlib.use("TkAgg")
 sub = fig.add_subplot(111)
 sub.set_xlabel("r")
 sub.set_ylabel("G(r)")
@@ -88,5 +89,18 @@ if __name__ == "__main__":
                         sg.popup_error("The provided PDFs don't share a r axis. dPDF could not be calculated.")
 
             diff_window.close()
+        elif event == "-SCALE_BUTTON-":
+            pdf = values["-PDF_LIST-"][0]
+            pdf.scale(float(values["-SCALE_IN-"][0]))
+            delete_fig(fig_agg)
+            fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+            matplotlib.use("TkAgg")
+            sub = fig.add_subplot(111)
+            sub.set_xlabel("r")
+            sub.set_ylabel("G(r)")
+            for p in pdfs:
+                sub.plot(p.r, p.g * p.scaling_factor)
+
+            fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
 
     window.close()
