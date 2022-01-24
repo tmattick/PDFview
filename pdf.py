@@ -42,7 +42,7 @@ class PDF:
         :return: true, if r and g arrays are equal
         :rtype: bool
         """
-        return np.array_equal(self.r, __o.r) and np.array_equal(self.g, __o.g)
+        return np.array_equal(self.r, __o.r) and np.array_equal(self.g * self.scaling_factor, __o.g * __o.scaling_factor)
 
     def __str__(self) -> str:
         return self.name
@@ -75,7 +75,7 @@ class PDF:
                     continue
 
         with open(path, "a") as f:
-            for x, y in zip(self.r, self.g):
+            for x, y in zip(self.r, self.g * self.scaling_factor):
                 f.write(f"{x} {y}\n")
 
     @staticmethod
@@ -92,7 +92,7 @@ class PDF:
         :raises XAxisException: if the r ranges of the provided PDFs are not equal
         """
         if np.array_equal(pdf1.r, pdf2.r):
-            g = pdf1.g - pdf2.g
+            g = pdf1.g * pdf1.scaling_factor - pdf2.g * pdf2.scaling_factor
             return PDF(pdf1.r, g, f"{pdf1} - {pdf2}")
         else:
             raise XAxisException(pdf1.r, pdf2.r)
