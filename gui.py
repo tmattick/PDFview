@@ -1,3 +1,4 @@
+from typing import List
 import PySimpleGUI as sg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
@@ -5,7 +6,7 @@ import matplotlib
 from pdf import PDF, XAxisException
 
 sg.theme("SystemDefault")
-pdfs = []
+pdfs: List[PDF] = []
 matplotlib.use("TkAgg")
 
 # Matplotlib setup
@@ -31,6 +32,7 @@ def delete_fig(agg):
 left_layout = [
     [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
     [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
+    [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
     [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
 ]
 right_layout = [
@@ -92,7 +94,7 @@ if __name__ == "__main__":
         elif event == "-SCALE_BUTTON-":
             try:
                 pdf = values["-PDF_LIST-"][0]
-                pdf.scale(float(values["-SCALE_IN-"][0]))
+                pdf.scale(float(values["-SCALE_IN-"]))
                 delete_fig(fig_agg)
                 fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
                 matplotlib.use("TkAgg")
