@@ -11,7 +11,8 @@ pdfs = []
 fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
 matplotlib.use("TkAgg")
 sub = fig.add_subplot(111)
-
+sub.set_xlabel("r")
+sub.set_ylabel("G(r)")
 
 def draw_figure(canvas, figure):
     figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
@@ -31,7 +32,9 @@ left_layout = [
     [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
     [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
 ]
-right_layout = [[sg.Canvas(size=(60, 60), key="-CANVAS-")]]
+right_layout = [
+    [sg.Canvas(size=(60, 60), key="-CANVAS-")],
+    [sg.Text("Scaling Factor:"), sg.In(size=(3, 1), key="-SCALE_IN-"), sg.Button("OK", key="-SCALE_BUTTON-")]]
 layout = [[sg.Column(left_layout), sg.VSeperator(), sg.Column(right_layout)]]
 
 window = sg.Window("PDFview", layout=layout, finalize=True)
