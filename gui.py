@@ -7,7 +7,7 @@ from pdf import PDF, XAxisException
 sg.theme("SystemDefault")
 pdfs = []
 
-# Matplotlib
+# Matplotlib setup
 fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
 matplotlib.use("TkAgg")
 sub = fig.add_subplot(111)
@@ -20,12 +20,12 @@ def draw_figure(canvas, figure):
     return figure_canvas_agg
 
 
-def delete_fig(fig_agg):
-    fig_agg.get_tk_widget().forget()
+def delete_fig(agg):
+    agg.get_tk_widget().forget()
     plt.close("all")
 
 
-# PySimpleGUI
+# PySimpleGUI setup
 left_layout = [
     [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
     [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
