@@ -3,6 +3,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.optimize import minimize_scalar
 import math
+import re
 
 
 class XAxisException(Exception):
@@ -58,7 +59,7 @@ class PDF:
         """
         self.scaling_factor = factor
 
-    def distance(self, other: 'PDF'):
+    def distance(self, other: 'PDF') -> float:
         """Calculates the distance between the PDF and another via the Euclidean distance. Raises a
         class:`XAxisException`, if the r ranges of the PDFs are not equal.
 
@@ -141,24 +142,38 @@ class PDF:
 
     @staticmethod
     def read_gr_file(path: str):
-        """Reads a PDF from a .gr-file produced by PDFgetX3.
+        """Reads a PDF from a .gr-file that is formatted with r values in the first column and g(r) in the second column
+        with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
         
         :param path: the path to the .gr-file to read from.
         :type path: str
         :return: the PDF that is read from the file with name of the file without extension.
         :rtype: :class:`PDF`
         """
+
+        def _is_data_row(row: str) -> bool:
+            """Determines whether an input string is "float space(s) float".
+
+            :param row: the string to evaluate.
+            :type row: str
+            :return: True if the input string is "float space(s) float", false otherwise.
+            :rtype: bool
+            """
+            regexp = re.compile(
+                "[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)( +)[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)")  # float space(s) float
+            return bool(regexp.search(row))
+
         with open(path, "r") as f:
             lines = f.readlines()
 
         r = []
         g = []
+        for line in lines:
+            if _is_data_row(line):
+                x, y = line.split(" ")
+                r.append(float(x))
+                g.append(float(y))
 
-        for line in lines[29:]:
-            x, y = line.split(" ")
-            r.append(float(x))
-            g.append(float(y))
-
-        name: str = os.path.basename(path).split(".")[0]
+        name: str = os.path.basename(path).split(".")[0]  # filename without extension
 
         return PDF(r, g, name)
