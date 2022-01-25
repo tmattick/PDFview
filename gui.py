@@ -30,8 +30,8 @@ def delete_fig(agg):
 
 # PySimpleGUI setup
 left_layout = [
-    [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
-    [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
+    [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-", expand_x=True), sg.FileBrowse()],
+    [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-", expand_x=True, expand_y=True)],
     [sg.Frame("File IO", [[sg.Button("Import", key="-IMPORT_BUTTON-"),
                            sg.InputText(visible=False, enable_events=True, key="-SAVE_PATH-"),
                            # gets the filename from save dialog
@@ -41,12 +41,110 @@ left_layout = [
     [sg.Frame("Combine PDFs", [[sg.Button("dPDF", key="-DIFF_BUTTON-"), sg.Button("Scale to...", key="-FIT_BUTTON-")]])]
 ]
 right_layout = [
-    [sg.Canvas(size=(60, 60), key="-CANVAS-")],
+    [sg.Canvas(size=(60, 60), key="-CANVAS-", expand_x=True, expand_y=True)],
     [sg.Text("Scaling Factor:"), sg.In(size=(3, 1), key="-SCALE_IN-"), sg.Button("OK", key="-SCALE_BUTTON-")]]
-layout = [[sg.Column(left_layout), sg.VSeperator(), sg.Column(right_layout)]]
+layout = [[sg.Column(left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
+           sg.Column(right_layout, expand_x=True, expand_y=True)]]
 
-window = sg.Window("PDFview", layout=layout, finalize=True)
+window = sg.Window("PDFview", layout=layout, finalize=True, resizable=True)
 fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+
+
+def import_pdf():
+    global fig_agg
+    path: str = window["-FILE_IN-"].get()
+    pdfs.append(PDF.read_gr_file(path))
+    window["-PDF_LIST-"].update(pdfs)
+    delete_fig(fig_agg)
+    sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
+    fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+
+
+def calc_diff_pdf():
+    global fig_agg
+    diff_layout = [[sg.Listbox(values=pdfs, enable_events=True, size=(20, 5), key="-PDF_MINUENDS-"),
+                    sg.Text(" - "),
+                    sg.Listbox(values=pdfs, enable_events=True, size=(20, 5), key="-PDF_SUBTRAHENDS-")],
+                   [sg.Button("OK", key="-DIFF_BUTTON-")]]
+    diff_window = sg.Window("dPDF", layout=diff_layout)
+    diff_run = True
+    while diff_run:
+        diff_event, diff_values = diff_window.read()
+        if diff_event == "Exit" or diff_event == sg.WIN_CLOSED:
+            diff_run = False
+            break
+        elif diff_event == "-DIFF_BUTTON-":
+            minuend: PDF = diff_values["-PDF_MINUENDS-"][0]
+            subtrahend: PDF = diff_values["-PDF_SUBTRAHENDS-"][0]
+            try:
+                diff_pdf: PDF = PDF.differential_pdf(minuend, subtrahend)
+                pdfs.append(diff_pdf)
+                window["-PDF_LIST-"].update(pdfs)
+                delete_fig(fig_agg)
+                sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
+                fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+                diff_run = False
+                break
+            except XAxisException:
+                sg.popup_error("The provided PDFs don't share a r axis. dPDF could not be calculated.")
+    diff_window.close()
+
+
+def scale_pdf():
+    global fig, sub, fig_agg
+    try:
+        pdf: PDF = values["-PDF_LIST-"][0]
+        pdf.scale(float(values["-SCALE_IN-"]))
+        delete_fig(fig_agg)
+        fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+        matplotlib.use("TkAgg")
+        sub = fig.add_subplot(111)
+        sub.set_xlabel("r")
+        sub.set_ylabel("G(r)")
+        for p in pdfs:
+            sub.plot(p.r, p.g * p.scaling_factor)
+
+        fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+    except IndexError:
+        sg.popup_error("Choose a PDF to scale.")
+
+
+def fit_to_pdf():
+    global fig, sub, fig_agg
+
+    fit_layout = [[sg.Text("Choose a PDF to scale to.")],
+                  [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-")],
+                  [sg.Button("OK", key="-FIT_BUTTON-")]]
+
+    fit_window = sg.Window("Scale to...", layout=fit_layout)
+    fit_run = True
+
+    while fit_run:
+        fit_event, fit_values = fit_window.read()
+        if fit_event == "Exit" or fit_event == sg.WIN_CLOSED:
+            fit_run = False
+            break
+        elif fit_event == "-FIT_BUTTON-":
+            fit_pdf: PDF = fit_values["-FIT_TO_PDFS-"][0]
+            try:
+                pdf.scale_to_pdf(fit_pdf)
+            except XAxisException:
+                sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
+            delete_fig(fig_agg)
+            fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+            matplotlib.use("TkAgg")
+            sub = fig.add_subplot(111)
+            sub.set_xlabel("r")
+            sub.set_ylabel("G(r)")
+            for p in pdfs:
+                sub.plot(p.r, p.g * p.scaling_factor)
+
+            fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+            fit_run = False
+            break
+
+    fit_window.close()
+
 
 if __name__ == "__main__":
     run = True
@@ -60,97 +158,20 @@ if __name__ == "__main__":
             break
         elif event == "-IMPORT_BUTTON-":
             # import new PDF from file
-            path: str = window["-FILE_IN-"].get()
-            pdfs.append(PDF.read_gr_file(path))
-            window["-PDF_LIST-"].update(pdfs)
-            delete_fig(fig_agg)
-            sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
-
-            fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+            import_pdf()
         elif event == "-DIFF_BUTTON-":
             # calculate differential PDF
-            diff_layout = [[sg.Listbox(values=pdfs, enable_events=True, size=(20, 5), key="-PDF_MINUENDS-"),
-                            sg.Text(" - "),
-                            sg.Listbox(values=pdfs, enable_events=True, size=(20, 5), key="-PDF_SUBTRAHENDS-")],
-                           [sg.Button("OK", key="-DIFF_BUTTON-")]]
-            diff_window = sg.Window("dPDF", layout=diff_layout)
-            diff_run = True
-            while diff_run:
-                diff_event, diff_values = diff_window.read()
-                if diff_event == "Exit" or diff_event == sg.WIN_CLOSED:
-                    diff_run = False
-                    break
-                elif diff_event == "-DIFF_BUTTON-":
-                    minuend: PDF = diff_values["-PDF_MINUENDS-"][0]
-                    subtrahend: PDF = diff_values["-PDF_SUBTRAHENDS-"][0]
-                    try:
-                        diff_pdf: PDF = PDF.differential_pdf(minuend, subtrahend)
-                        pdfs.append(diff_pdf)
-                        window["-PDF_LIST-"].update(pdfs)
-                        delete_fig(fig_agg)
-                        sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
-                        fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
-                        diff_run = False
-                        break
-                    except XAxisException as e:
-                        sg.popup_error("The provided PDFs don't share a r axis. dPDF could not be calculated.")
-
-            diff_window.close()
+            calc_diff_pdf()
         elif event == "-SCALE_BUTTON-":
             # scale a PDF to a multiple of itself
-            try:
-                pdf: PDF = values["-PDF_LIST-"][0]
-                pdf.scale(float(values["-SCALE_IN-"]))
-                delete_fig(fig_agg)
-                fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-                matplotlib.use("TkAgg")
-                sub = fig.add_subplot(111)
-                sub.set_xlabel("r")
-                sub.set_ylabel("G(r)")
-                for p in pdfs:
-                    sub.plot(p.r, p.g * p.scaling_factor)
-
-                fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
-            except IndexError as e:
-                sg.popup_error("Choose a PDF to scale.")
+            scale_pdf()
         elif event == "-FIT_BUTTON-":
             # fit the chosen PDF to another one via scaling
             try:
-                fit_layout = [[sg.Text("Choose a PDF to scale to.")],
-                              [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-")],
-                              [sg.Button("OK", key="-FIT_BUTTON-")]]
                 pdf: PDF = values["-PDF_LIST-"][0]
-
-                fit_window = sg.Window("Scale to...", layout=fit_layout)
-                fit_run = True
-
-                while fit_run:
-                    fit_event, fit_values = fit_window.read()
-                    if fit_event == "Exit" or fit_event == sg.WIN_CLOSED:
-                        fit_run = False
-                        break
-                    elif fit_event == "-FIT_BUTTON-":
-                        fit_pdf: PDF = fit_values["-FIT_TO_PDFS-"][0]
-                        pdf.scale_to_pdf(fit_pdf)
-                        delete_fig(fig_agg)
-                        fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-                        matplotlib.use("TkAgg")
-                        sub = fig.add_subplot(111)
-                        sub.set_xlabel("r")
-                        sub.set_ylabel("G(r)")
-                        for p in pdfs:
-                            sub.plot(p.r, p.g * p.scaling_factor)
-
-                        fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
-                        fit_run = False
-                        break
-
-                fit_window.close()
-
-            except IndexError as e:
-                sg.popup_error("Choose a PDF to fit.")
-            except XAxisException as e:
-                sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
+                fit_to_pdf()
+            except IndexError:
+                sg.popup_error("Choose a PDF to scale.")
         elif event == "-SAVE_PATH-":
             # save the chosen PDF
             try:
