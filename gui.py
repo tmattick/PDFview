@@ -33,10 +33,10 @@ left_layout = [
     [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
     [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
     [sg.Button("Import", key="-IMPORT_BUTTON-"),
-     sg.InputText(visible=False, enable_events=True, key="-SAVE_PATH-"), # gets the filename from save dialog
+     sg.InputText(visible=False, enable_events=True, key="-SAVE_PATH-"),  # gets the filename from save dialog
      sg.FileSaveAs(file_types=((".gr-Files", ".gr"), ("ALL Files", ".*")), default_extension=".gr",
-                   key="-SAVE_BUTTON-"),
-     sg.Button("dPDF", key="-DIFF_BUTTON-")]
+                   key="-SAVE_BUTTON-")],
+    [sg.Button("dPDF", key="-DIFF_BUTTON-"), sg.Button("Scale to...", key="-FIT_BUTTON-")]
 ]
 right_layout = [
     [sg.Canvas(size=(60, 60), key="-CANVAS-")],
@@ -110,6 +110,43 @@ if __name__ == "__main__":
                 fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
             except IndexError as e:
                 sg.popup_error("Choose a PDF to scale.")
+        elif event == "-FIT_BUTTON-":
+            try:
+                fit_layout = [[sg.Text("Choose a PDF to scale to.")],
+                              [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-")],
+                              [sg.Button("OK", key="-FIT_BUTTON-")]]
+                pdf = values["-PDF_LIST-"][0]
+
+                fit_window = sg.Window("Scale to...", layout=fit_layout)
+                fit_run = True
+
+                while fit_run:
+                    fit_event, fit_values = fit_window.read()
+                    if fit_event == "Exit" or fit_event == sg.WIN_CLOSED:
+                        fit_run = False
+                        break
+                    elif fit_event == "-FIT_BUTTON-":
+                        fit_pdf = fit_values["-FIT_TO_PDFS-"][0]
+                        pdf.scale_to_pdf(fit_pdf)
+                        delete_fig(fig_agg)
+                        fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+                        matplotlib.use("TkAgg")
+                        sub = fig.add_subplot(111)
+                        sub.set_xlabel("r")
+                        sub.set_ylabel("G(r)")
+                        for p in pdfs:
+                            sub.plot(p.r, p.g * p.scaling_factor)
+
+                        fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+                        fit_run = False
+                        break
+
+                fit_window.close()
+
+            except IndexError as e:
+                sg.popup_error("Choose a PDF to fit.")
+            except XAxisException as e:
+                sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
         elif event == "-SAVE_PATH-":
             try:
                 pdf = values["-PDF_LIST-"][0]
