@@ -131,7 +131,7 @@ class PDF:
             raise XAxisException(pdf1.r, pdf2.r)
 
     @staticmethod
-    def read_gr_file(path: str):
+    def read_gr_file(path: str) -> 'PDF':
         """Reads a PDF from a .gr-file that is formatted with r values in the first column and g(r) in the second column
         with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
         
