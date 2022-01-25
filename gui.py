@@ -33,7 +33,6 @@ left_layout = [
     [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
     [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
     [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
-    [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
 ]
 right_layout = [
     [sg.Canvas(size=(60, 60), key="-CANVAS-")],
