@@ -68,7 +68,7 @@ class PDF:
         :raises XAxisException: if the r ranges of the  PDFs are not equal.
         """
         if np.array_equal(self.r, other.r):
-            dist_array = self.g - other.g
+            dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
             dist_array = np.square(dist_array)
             dist = math.sqrt(np.sum(dist_array))
             return dist
@@ -91,7 +91,7 @@ class PDF:
             return dist
 
         if np.array_equal(self.r, other.r):
-            res = minimize_scalar(_distance_with_factor, args=(self.g, other.g), method="Brent")
+            res = minimize_scalar(_distance_with_factor, args=(self.g, other.g * other.scaling_factor), method="Brent")
             if res.success:
                 self.scaling_factor = res.x
         else:
@@ -134,7 +134,7 @@ class PDF:
     def read_gr_file(path: str) -> 'PDF':
         """Reads a PDF from a .gr-file that is formatted with r values in the first column and g(r) in the second column
         with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
-        
+
         :param path: the path to the .gr-file to read from.
         :type path: str
         :return: the PDF that is read from the file with name of the file without extension.
