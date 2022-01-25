@@ -113,7 +113,7 @@ def fit_to_pdf():
     global fig, sub, fig_agg
 
     fit_layout = [[sg.Text("Choose a PDF to scale to.")],
-                  [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-")],
+                  [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-", size=(20, 5))],
                   [sg.Button("OK", key="-FIT_BUTTON-")]]
 
     fit_window = sg.Window("Scale to...", layout=fit_layout)
