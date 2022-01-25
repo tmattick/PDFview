@@ -104,22 +104,12 @@ class PDF:
         :param path: The path to save the .gr-file to. Has to contain the file-extension.
         :type path: str
         """
-        if os.path.exists(path):
-            print("The file already exists.")
-            while True:
-                overwrite = input("Overwrite the file? (y/n): ")
-                if overwrite.lower() == "y":
-                    os.remove(path)
-                    break
-                elif overwrite.lower() == "n":
-                    return
-                else:
-                    print("Input could not be parsed.")
-                    continue
-
-        with open(path, "a") as f:
-            for x, y in zip(self.r, self.g * self.scaling_factor):
-                f.write(f"{x} {y}\n")
+        if not os.path.exists(path):
+            with open(path, "a") as f:
+                for x, y in zip(self.r, self.g * self.scaling_factor):
+                    f.write(f"{x} {y}\n")
+        else:
+            raise FileExistsError("The file your about to write to already exists.")
 
     @staticmethod
     def differential_pdf(pdf1: 'PDF', pdf2: 'PDF') -> 'PDF':

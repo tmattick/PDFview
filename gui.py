@@ -32,7 +32,11 @@ def delete_fig(agg):
 left_layout = [
     [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-"), sg.FileBrowse()],
     [sg.Listbox(values=pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-")],
-    [sg.Button("Import", key="-IMPORT_BUTTON-"), sg.Button("dPDF", key="-DIFF_BUTTON-")]
+    [sg.Button("Import", key="-IMPORT_BUTTON-"),
+     sg.InputText(visible=False, enable_events=True, key="-SAVE_PATH-"), # gets the filename from save dialog
+     sg.FileSaveAs(file_types=((".gr-Files", ".gr"), ("ALL Files", ".*")), default_extension=".gr",
+                   key="-SAVE_BUTTON-"),
+     sg.Button("dPDF", key="-DIFF_BUTTON-")]
 ]
 right_layout = [
     [sg.Canvas(size=(60, 60), key="-CANVAS-")],
@@ -106,5 +110,11 @@ if __name__ == "__main__":
                 fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
             except IndexError as e:
                 sg.popup_error("Choose a PDF to scale.")
+        elif event == "-SAVE_PATH-":
+            try:
+                pdf = values["-PDF_LIST-"][0]
+                pdf.save_gr_file(values["-SAVE_PATH-"])
+            except IndexError as e:
+                sg.popup_error("Choose a PDF to save.")
 
     window.close()
