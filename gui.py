@@ -74,39 +74,47 @@ def calc_diff_pdf():
             diff_run = False
             break
         elif diff_event == "-DIFF_BUTTON-":
-            minuend: PDF = diff_values["-PDF_MINUENDS-"][0]
-            subtrahend: PDF = diff_values["-PDF_SUBTRAHENDS-"][0]
+            try:
+                minuend: PDF = diff_values["-PDF_MINUENDS-"][0]
+                subtrahend: PDF = diff_values["-PDF_SUBTRAHENDS-"][0]
+            except IndexError:
+                sg.popup_error("Please select a minuend and a subtrahend PDF.")
+                return
             try:
                 diff_pdf: PDF = PDF.differential_pdf(minuend, subtrahend)
-                pdfs.append(diff_pdf)
-                window["-PDF_LIST-"].update(pdfs)
-                delete_fig(fig_agg)
-                sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
-                fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
-                diff_run = False
-                break
             except XAxisException:
                 sg.popup_error("The provided PDFs don't share a r axis. dPDF could not be calculated.")
+                return
+
+            pdfs.append(diff_pdf)
+            window["-PDF_LIST-"].update(pdfs)
+            delete_fig(fig_agg)
+            sub.plot(pdfs[-1].r, pdfs[-1].g * pdfs[-1].scaling_factor)
+            fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+            diff_run = False
+            break
     diff_window.close()
 
 
 def scale_pdf():
     global fig, sub, fig_agg
     try:
-        pdf: PDF = values["-PDF_LIST-"][0]
-        pdf.scale(float(values["-SCALE_IN-"]))
-        delete_fig(fig_agg)
-        fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-        matplotlib.use("TkAgg")
-        sub = fig.add_subplot(111)
-        sub.set_xlabel("r")
-        sub.set_ylabel("G(r)")
-        for p in pdfs:
-            sub.plot(p.r, p.g * p.scaling_factor)
-
-        fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
+        pdf_to_scale: PDF = values["-PDF_LIST-"][0]
     except IndexError:
         sg.popup_error("Choose a PDF to scale.")
+        return
+
+    pdf_to_scale.scale(float(values["-SCALE_IN-"]))
+    delete_fig(fig_agg)
+    fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+    matplotlib.use("TkAgg")
+    sub = fig.add_subplot(111)
+    sub.set_xlabel("r")
+    sub.set_ylabel("G(r)")
+    for p in pdfs:
+        sub.plot(p.r, p.g * p.scaling_factor)
+
+    fig_agg = draw_figure(window["-CANVAS-"].TKCanvas, fig)
 
 
 def fit_to_pdf():
@@ -125,11 +133,17 @@ def fit_to_pdf():
             fit_run = False
             break
         elif fit_event == "-FIT_BUTTON-":
-            fit_pdf: PDF = fit_values["-FIT_TO_PDFS-"][0]
+            try:
+                fit_pdf: PDF = fit_values["-FIT_TO_PDFS-"][0]
+            except IndexError:
+                sg.popup_error("Please select a PDF to fit to.")
+                return
             try:
                 pdf.scale_to_pdf(fit_pdf)
             except XAxisException:
                 sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
+                return
+
             delete_fig(fig_agg)
             fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
             matplotlib.use("TkAgg")
