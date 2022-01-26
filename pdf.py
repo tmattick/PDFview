@@ -3,7 +3,6 @@ import numpy as np
 import numpy.typing as npt
 from typing import Optional
 from scipy.optimize import minimize_scalar
-import math
 import re
 
 
@@ -91,8 +90,8 @@ class PDF:
         self.scaling_factor = factor
 
     def distance(self, other: 'PDF') -> float:
-        """Calculates the distance between the PDF and another via the Euclidean distance. Raises a
-        class:`XAxisException`, if the r ranges of the PDFs are not equal.
+        """Calculates the distance between the PDF and another via squared distance. Raises a class:`XAxisException`,
+        if the r ranges of the PDFs are not equal.
 
         :param other: the PDF to calculate the distance to.
         :type other: :class:`PDF`
@@ -101,13 +100,13 @@ class PDF:
         if np.array_equal(self.r, other.r):
             dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
             dist_array = np.square(dist_array)
-            dist = math.sqrt(np.sum(dist_array))
+            dist = np.sum(dist_array)
             return dist
         else:
             raise XAxisException(self.r, other.r)
 
     def scale_to_pdf(self, other: 'PDF', start: Optional[float], end: Optional[float]):
-        """Scales the PDF to best approximate another PDF. This is done by minimizing the Euclidean distance between the
+        """Scales the PDF to best approximate another PDF. This is done by minimizing the squared distance between the
         PDFs. Raises a class:`XAxisException`, if the r ranges of the PDFs are not equal.
 
         :param other: the PDF to approximate.
@@ -122,7 +121,7 @@ class PDF:
         def _distance_with_factor(factor: float, x: np.ndarray, y: np.ndarray) -> float:
             dist_array = factor * x - y
             dist_array = np.square(dist_array)
-            dist = math.sqrt(np.sum(dist_array))
+            dist = np.sum(dist_array)
             return dist
 
         if start is None:
