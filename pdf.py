@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import numpy.typing as npt
+from typing import Optional
 from scipy.optimize import minimize_scalar
 import math
 import re
@@ -59,7 +60,7 @@ class PDF:
         :return: the index of r_min, if r_min is in self.r. Otherwise, the index of the smallest value in self.r, that
         is greater than r_min.
         :rtype: int"""
-        arr = np.where(self.r >= r_min)[0]
+        arr: np.ndarray = np.where(self.r >= r_min)[0]  # Returns an array of indices where self.r >= r_min
         if arr.size > 0:
             index = np.amin(arr)
         else:
@@ -74,7 +75,7 @@ class PDF:
         :return: the index of r_max, if r_max is in self.r. Otherwise, the index of the greatest value in self.r, that
         is less than r_min.
         :rtype: int"""
-        arr = np.where(self.r <= r_max)[0]
+        arr: np.ndarray = np.where(self.r <= r_max)[0]  # Returns an array of indices where self.r <= r_max
         if arr.size > 0:
             index = np.amax(arr)
         else:
@@ -105,13 +106,17 @@ class PDF:
         else:
             raise XAxisException(self.r, other.r)
 
-    def scale_to_pdf(self, other: 'PDF'):
+    def scale_to_pdf(self, other: 'PDF', start: Optional[float], end: Optional[float]):
         """Scales the PDF to best approximate another PDF. This is done by minimizing the Euclidean distance between the
         PDFs. Raises a class:`XAxisException`, if the r ranges of the PDFs are not equal.
 
         :param other: the PDF to approximate.
         :type other: :class:`PDF`
-        :raises XAxisException: if the r ranges of the PDFs are not equal.
+        :param start: r value where to start the fit.
+        :type start: Optional[float]
+        :param end: r value where to end the fit.
+        :type end: Optional[float]
+        :raises XAxisException: if the r ranges of the PDFs are not equal between start and end.
         """
 
         def _distance_with_factor(factor: float, x: np.ndarray, y: np.ndarray) -> float:
@@ -120,8 +125,19 @@ class PDF:
             dist = math.sqrt(np.sum(dist_array))
             return dist
 
-        if np.array_equal(self.r, other.r):
-            res = minimize_scalar(_distance_with_factor, args=(self.g, other.g * other.scaling_factor), method="Brent")
+        if start is None:
+            start = np.amax([np.amin(self.r), np.amin(other.r)])
+        if end is None:
+            end = np.amin([np.amax(self.r), np.amax(other.r)])
+
+        start_i_self = self._get_rmin_index(start)
+        start_i_other = other._get_rmin_index(start)
+        end_i_self = self._get_rmax_index(end)
+        end_i_other = other._get_rmax_index(end)
+        if np.array_equal(self.r[start_i_self:end_i_self], other.r[start_i_other:end_i_other]):
+            res = minimize_scalar(_distance_with_factor, args=(
+                self.g[start_i_self:end_i_self], other.g[start_i_other:end_i_other] * other.scaling_factor),
+                                  method="Brent")
             if res.success:
                 self.scaling_factor = res.x
         else:
