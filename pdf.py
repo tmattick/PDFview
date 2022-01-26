@@ -51,6 +51,36 @@ class PDF:
     def __str__(self) -> str:
         return self.name
 
+    def _get_rmin_index(self, r_min: float) -> int:
+        """Gets the index of the smallest value in self.r where r >= r_min.
+
+        :param r_min: the minimum r to look for.
+        :type r_min: float
+        :return: the index of r_min, if r_min is in self.r. Otherwise, the index of the smallest value in self.r, that
+        is greater than r_min.
+        :rtype: int"""
+        arr = np.where(self.r >= r_min)[0]
+        if arr.size > 0:
+            index = np.amin(arr)
+        else:
+            index = 0
+        return index
+
+    def _get_rmax_index(self, r_max: float) -> int:
+        """Gets the index of the greatest value in self.r where r <= r_max.
+
+        :param r_max: the maximum r to look for.
+        :type r_max: float
+        :return: the index of r_max, if r_max is in self.r. Otherwise, the index of the greatest value in self.r, that
+        is less than r_min.
+        :rtype: int"""
+        arr = np.where(self.r <= r_max)[0]
+        if arr.size > 0:
+            index = np.amax(arr)
+        else:
+            index = self.r.size
+        return index
+
     def scale(self, factor: float):
         """Scales the PDF by multiplying g with the factor given.
         
