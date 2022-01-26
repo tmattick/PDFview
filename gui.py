@@ -122,6 +122,8 @@ def fit_to_pdf():
 
     fit_layout = [[sg.Text("Choose a PDF to scale to.")],
                   [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-", size=(20, 5))],
+                  [sg.Text("Fit from"), sg.In(size=(5, 1), key="-FIT_START_IN-"), sg.Text("to"),
+                   sg.In(size=(5, 1), key="-FIT_END_IN-")],
                   [sg.Button("OK", key="-FIT_BUTTON-")]]
 
     fit_window = sg.Window("Scale to...", layout=fit_layout)
@@ -138,8 +140,18 @@ def fit_to_pdf():
             except IndexError:
                 sg.popup_error("Please select a PDF to fit to.")
                 return
+
+            if fit_values["-FIT_START_IN-"] != "":
+                fit_start = float(fit_values["-FIT_START_IN-"])
+            else:
+                fit_start = None
+            if fit_values["-FIT_END_IN-"] != "":
+                fit_end = float(fit_values["-FIT_END_IN-"])
+            else:
+                fit_end = None
+
             try:
-                pdf.scale_to_pdf(fit_pdf)
+                pdf.scale_to_pdf(fit_pdf, fit_start, fit_end)
             except XAxisException:
                 sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
                 return
