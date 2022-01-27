@@ -79,12 +79,12 @@ def calc_diff_pdf():
                 subtrahend: PDF = diff_values["-PDF_SUBTRAHENDS-"][0]
             except IndexError:
                 sg.popup_error("Please select a minuend and a subtrahend PDF.")
-                return
+                continue
             try:
                 diff_pdf: PDF = PDF.differential_pdf(minuend, subtrahend)
             except XAxisException:
                 sg.popup_error("The provided PDFs don't share a r axis. dPDF could not be calculated.")
-                return
+                continue
 
             pdfs.append(diff_pdf)
             window["-PDF_LIST-"].update(pdfs)
@@ -139,7 +139,7 @@ def fit_to_pdf():
                 fit_pdf: PDF = fit_values["-FIT_TO_PDFS-"][0]
             except IndexError:
                 sg.popup_error("Please select a PDF to fit to.")
-                return
+                continue
 
             if fit_values["-FIT_START_IN-"] != "":
                 fit_start = float(fit_values["-FIT_START_IN-"])
@@ -154,7 +154,7 @@ def fit_to_pdf():
                 pdf.scale_to_pdf(fit_pdf, fit_start, fit_end)
             except XAxisException:
                 sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
-                return
+                continue
 
             delete_fig(fig_agg)
             fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
