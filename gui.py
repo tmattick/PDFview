@@ -95,6 +95,7 @@ class MainWindow(Window):
         diff_window = DiffWindow(self.pdfs)
         diff_pdf: PDF = diff_window.run()
         self.pdfs.append(diff_pdf)
+        self.window["-PDF_LIST-"].update(self.pdfs)
         self._add_to_plot()
 
     def _scale_pdf(self):
@@ -118,7 +119,7 @@ class MainWindow(Window):
         self.sub.set_ylabel("G(r)")
 
     def _draw_figure(self):
-        self.fig_agg = FigureCanvasTkAgg(self.window["-CANVAS-"].TKCanvas, self.fig)
+        self.fig_agg = FigureCanvasTkAgg(self.fig, self.window["-CANVAS-"].TKCanvas)
         self.fig_agg.draw()
         self.fig_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
 
