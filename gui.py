@@ -11,6 +11,18 @@ matplotlib.use("TkAgg")
 
 
 class Window(ABC):
+    """An abstract class representing a PySimpleGUI window with a run method containing the event loop.
+
+    :param layout: a list of lists of PySimpleGUI elements. See the PySimpleGUI documentation for more info.
+    :type layout: List[List[:class:`sg.Element`]]
+    :param title: the title of the window.
+    :type title: str
+    :param finalize: whether to finalize the window. Defaults to True.
+    :type finalize: bool, optional
+    :param resizable: whether the window is resizable. Defaults to True.
+    :type resizable: bool, optional
+    """
+
     @abstractmethod
     def __init__(self, layout: List[List[sg.Element]], title: str, finalize: bool = True, resizable: bool = False):
         self.layout = layout
@@ -18,10 +30,17 @@ class Window(ABC):
 
     @abstractmethod
     def run(self) -> Optional[PDF]:
+        """The abstract event loop.
+        :return: Some instances return a PDF object when the event loop is finished.
+        :rtype: PDF, optional
+        """
         pass
 
 
 class MainWindow(Window):
+    """The main window of the PDFview application.
+    """
+
     def __init__(self):
         self.pdfs: List[PDF] = []
         self._setup_fig_sub()
@@ -50,6 +69,8 @@ class MainWindow(Window):
         self.event = self.values = None
 
     def run(self):
+        """The main event loop of the application. Terminates only when the user closes the window.
+        """
         run_window = True
 
         while run_window:
@@ -85,13 +106,19 @@ class MainWindow(Window):
 
         self.window.close()
 
+    # working with PDFs
     def _import_pdf(self):
+        """Method for importing PDFs from file. Appends them to `self.pdfs` and plots them to the right-hand canvas.
+        """
         path: str = self.window["-FILE_IN-"].get()
         self.pdfs.append(PDF.read_gr_file(path))
         self.window["-PDF_LIST-"].update(self.pdfs)
         self._add_to_plot()
 
     def _calc_diff_pdf(self):
+        """Method for calculating dPDFs. Opens a :class:`DiffWindow` object, that returns the dPDF from two selected
+        PDFs. Appends it to `self.pdfs` and plots it on the right-hand canvas.
+        """
         diff_window = DiffWindow(self.pdfs)
         diff_pdf: PDF = diff_window.run()
         self.pdfs.append(diff_pdf)
@@ -99,6 +126,8 @@ class MainWindow(Window):
         self._add_to_plot()
 
     def _scale_pdf(self):
+        """Method for scaling PDFs. Draws a new plot with the scaled PDFs on the right-hand canvas.
+        """
         try:
             pdf_to_scale: PDF = self.values["-PDF_LIST-"][0]
         except IndexError:
@@ -108,31 +137,46 @@ class MainWindow(Window):
         self._draw_new_plot()
 
     def _fit_to_pdf(self):
+        """Method for scaling PDFs to another PDF. Opens a :class:`FitWindow` object that performs the fitting. Draws a
+        new plot with the fitted PDFs on the right-hand canvas.
+        """
         fit_window = FitWindow(self.pdfs, self.values["-PDF_LIST-"][0])
         fit_window.run()
         self._draw_new_plot()
 
+    # utilities for drawing
     def _setup_fig_sub(self):
+        """Sets up the figure and subplot for the right-hand canvas.
+        """
         self.fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
         self.sub = self.fig.add_subplot(111)
         self.sub.set_xlabel("r")
         self.sub.set_ylabel("G(r)")
 
     def _draw_figure(self):
+        """Sets up `self.fig_agg` and performs the drawing on it.
+        """
         self.fig_agg = FigureCanvasTkAgg(self.fig, self.window["-CANVAS-"].TKCanvas)
         self.fig_agg.draw()
         self.fig_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
 
     def _delete_fig(self):
+        """Deletes `self.fig_agg`.
+        """
         self.fig_agg.get_tk_widget().forget()
         plt.close("all")
 
     def _add_to_plot(self):
+        """This method is used for adding a new PDF to existing plots. The new PDF has to be the last element in
+        `self.pdfs`. Replaces the old `self.fig_agg`.
+        """
         self._delete_fig()
         self.sub.plot(self.pdfs[-1].r, self.pdfs[-1].g * self.pdfs[-1].scaling_factor)
         self._draw_figure()
 
     def _draw_new_plot(self):
+        """This method is used for drawing an entirely new plot with all the PDFs in `self.pdfs`. Replaces the old
+        `self.fig_agg`."""
         self._delete_fig()
         self._setup_fig_sub()
         for p in self.pdfs:
@@ -142,6 +186,13 @@ class MainWindow(Window):
 
 
 class DiffWindow(Window):
+    """Window for calculating dPDFs. Lets you select two PDFs from `pdfs` and returns the dPDF after hitting the OK
+    button.
+
+    :param pdfs: PDFs to select from for calculating the dPDF.
+    :type pdfs: List[PDF]
+    """
+
     def __init__(self, pdfs: List[PDF]):
         super().__init__([[sg.Listbox(values=pdfs, enable_events=True, size=(20, 5), key="-PDF_MINUENDS-"),
                            sg.Text(" - "),
@@ -149,6 +200,11 @@ class DiffWindow(Window):
                           [sg.Button("OK", key="-DIFF_BUTTON-")]], "dPDF")
 
     def run(self) -> Optional[PDF]:
+        """The event loop for the :class:``DiffWindow``. Returns the dPDF after selecting two PDFs and hitting OK.
+
+        :return: The dPDF if the user hits OK. Otherwise, returns `None`.
+        :rtype: Optional[PDF]
+        """
         run_window = True
         diff_pdf: Optional[PDF] = None
         while run_window:
@@ -175,6 +231,14 @@ class DiffWindow(Window):
 
 
 class FitWindow(Window):
+    """Window for fitting a PDF to another PDF via scaling. Scales `pdf_to_fit` in place. Lets you select PDF to fit to
+    from `pdfs`.
+
+    :param pdfs: list of PDFs to choose the PDF to fit to.
+    :type pdfs: List[PDF]
+    :param pdf_to_fit: the PDF to fit.
+    :type pdf_to_fit: :class:``PDF``
+    """
     def __init__(self, pdfs: List[PDF], pdf_to_fit: PDF):
         self.pdf_to_fit: PDF = pdf_to_fit
         super().__init__([[sg.Text("Choose a PDF to scale to.")],
@@ -184,6 +248,8 @@ class FitWindow(Window):
                           [sg.Button("OK", key="-FIT_BUTTON-")]], "Scale to...")
 
     def run(self):
+        """Event loop for :class:``FitWindow``. Performs the fitting after the user hits the OK button.
+        """
         run_window = True
 
         while run_window:
