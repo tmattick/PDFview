@@ -107,7 +107,9 @@ class MainWindow(Window):
         self._draw_new_plot()
 
     def _fit_to_pdf(self):
-        raise NotImplementedError()
+        fit_window = FitWindow(self.pdfs, self.values["-PDF_LIST-"][0])
+        fit_window.run()
+        self._draw_new_plot()
 
     def _setup_fig_sub(self):
         self.fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
@@ -169,3 +171,47 @@ class DiffWindow(Window):
                 break
         self.window.close()
         return diff_pdf
+
+
+class FitWindow(Window):
+    def __init__(self, pdfs: List[PDF], pdf_to_fit: PDF):
+        self.pdf_to_fit = pdf_to_fit
+        super().__init__([[sg.Text("Choose a PDF to scale to.")],
+                          [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-", size=(20, 5))],
+                          [sg.Text("Fit from"), sg.In(size=(5, 1), key="-FIT_START_IN-"), sg.Text("to"),
+                           sg.In(size=(5, 1), key="-FIT_END_IN-")],
+                          [sg.Button("OK", key="-FIT_BUTTON-")]], "Scale to...")
+
+    def run(self):
+        run_window = True
+
+        while run_window:
+            event, values = self.window.read()
+            if event == "Exit" or event == sg.WIN_CLOSED:
+                run_window = False
+                break
+            elif event == "-FIT_BUTTON-":
+                try:
+                    fit_pdf: PDF = values["-FIT_TO_PDFS-"][0]
+                except IndexError:
+                    sg.popup_error("Please select a PDF to fit to.")
+                    continue
+
+                if values["-FIT_START_IN-"] != "":
+                    fit_start = float(values["-FIT_START_IN-"])
+                else:
+                    fit_start = None
+                if values["-FIT_END_IN-"] != "":
+                    fit_end = float(values["-FIT_END_IN-"])
+                else:
+                    fit_end = None
+
+                try:
+                    self.pdf_to_fit.scale_to_pdf(fit_pdf, fit_start, fit_end)
+                except XAxisException:
+                    sg.popup_error("The provided PDFs don't share a r axis. Fit could not be calculated.")
+                    continue
+                run_window = False
+                break
+
+        self.window.close()
