@@ -17,7 +17,7 @@ class Window(ABC):
         self.window = sg.Window(title, layout=layout, finalize=finalize, resizable=resizable)
 
     @abstractmethod
-    def run(self):
+    def run(self) -> Optional[PDF]:
         pass
 
 
@@ -80,7 +80,7 @@ class MainWindow(Window):
                 try:
                     self.pdf: PDF = self.values["-PDF_LIST-"][0]
                     self.pdf.save_gr_file(self.values["-SAVE_PATH-"])
-                except IndexError as e:
+                except IndexError:
                     sg.popup_error("Select a PDF to save.")
 
         self.window.close()
@@ -176,7 +176,7 @@ class DiffWindow(Window):
 
 class FitWindow(Window):
     def __init__(self, pdfs: List[PDF], pdf_to_fit: PDF):
-        self.pdf_to_fit = pdf_to_fit
+        self.pdf_to_fit: PDF = pdf_to_fit
         super().__init__([[sg.Text("Choose a PDF to scale to.")],
                           [sg.Listbox(values=pdfs, key="-FIT_TO_PDFS-", size=(20, 5))],
                           [sg.Text("Fit from"), sg.In(size=(5, 1), key="-FIT_START_IN-"), sg.Text("to"),
@@ -199,11 +199,11 @@ class FitWindow(Window):
                     continue
 
                 if values["-FIT_START_IN-"] != "":
-                    fit_start = float(values["-FIT_START_IN-"])
+                    fit_start: Optional[float] = float(values["-FIT_START_IN-"])
                 else:
                     fit_start = None
                 if values["-FIT_END_IN-"] != "":
-                    fit_end = float(values["-FIT_END_IN-"])
+                    fit_end: Optional[float] = float(values["-FIT_END_IN-"])
                 else:
                     fit_end = None
 
