@@ -11,15 +11,15 @@ matplotlib.use("TkAgg")
 
 
 class Window(ABC):
-    """An abstract class representing a PySimpleGUI window with a run method containing the event loop.
+    """An abstract class representing a PySimpleGUI window with a :method:`run` method containing the event loop.
 
-    :param layout: a list of lists of PySimpleGUI elements. See the PySimpleGUI documentation for more info.
+    :param layout: A list of lists of PySimpleGUI elements. See the PySimpleGUI documentation for more info.
     :type layout: List[List[:class:`sg.Element`]]
-    :param title: the title of the window.
+    :param title: The title of the window.
     :type title: str
-    :param finalize: whether to finalize the window. Defaults to True.
+    :param finalize: Whether to finalize the window. Defaults to True.
     :type finalize: bool, optional
-    :param resizable: whether the window is resizable. Defaults to True.
+    :param resizable: Whether the window is resizable. Defaults to True.
     :type resizable: bool, optional
     """
 
@@ -31,14 +31,14 @@ class Window(ABC):
     @abstractmethod
     def run(self) -> Optional[PDF]:
         """The abstract event loop.
-        :return: Some instances return a PDF object when the event loop is finished.
-        :rtype: PDF, optional
+        :return: Some instances return a :class:`PDF` object when the event loop is finished.
+        :rtype: :class:`PDF`, optional
         """
         pass
 
 
 class MainWindow(Window):
-    """The main window of the PDFview application.
+    """The main window of the PDFview application. Inherits from :class:`Window`.
     """
 
     def __init__(self):
@@ -69,7 +69,7 @@ class MainWindow(Window):
         self.event = self.values = None
 
     def run(self):
-        """The main event loop of the application. Terminates only when the user closes the window.
+        """The main event loop of :class:`MainWindow`. Terminates only when the user closes the window.
         """
         run_window = True
 
@@ -108,7 +108,8 @@ class MainWindow(Window):
 
     # working with PDFs
     def _import_pdf(self):
-        """Method for importing PDFs from file. Appends them to `self.pdfs` and plots them to the right-hand canvas.
+        """Method for importing :class:`PDF` objects from file. Appends them to `self.pdfs` and plots them to the
+        right-hand canvas.
         """
         path: str = self.window["-FILE_IN-"].get()
         self.pdfs.append(PDF.read_gr_file(path))
@@ -117,7 +118,7 @@ class MainWindow(Window):
 
     def _calc_diff_pdf(self):
         """Method for calculating dPDFs. Opens a :class:`DiffWindow` object, that returns the dPDF from two selected
-        PDFs. Appends it to `self.pdfs` and plots it on the right-hand canvas.
+        PDFs as a :class:`PDF` object. Appends it to `self.pdfs` and plots it on the right-hand canvas.
         """
         diff_window = DiffWindow(self.pdfs)
         diff_pdf: PDF = diff_window.run()
@@ -126,7 +127,7 @@ class MainWindow(Window):
         self._add_to_plot()
 
     def _scale_pdf(self):
-        """Method for scaling PDFs. Draws a new plot with the scaled PDFs on the right-hand canvas.
+        """Method for scaling :class:`PDF` objects. Draws a new plot with the scaled PDFs on the right-hand canvas.
         """
         try:
             pdf_to_scale: PDF = self.values["-PDF_LIST-"][0]
@@ -137,8 +138,8 @@ class MainWindow(Window):
         self._draw_new_plot()
 
     def _fit_to_pdf(self):
-        """Method for scaling PDFs to another PDF. Opens a :class:`FitWindow` object that performs the fitting. Draws a
-        new plot with the fitted PDFs on the right-hand canvas.
+        """Method for scaling :class:`PDF` objects to another :class:`PDF` object. Opens a :class:`FitWindow` object
+        that performs the fitting. Draws a new plot with the fitted PDFs on the right-hand canvas.
         """
         fit_window = FitWindow(self.pdfs, self.values["-PDF_LIST-"][0])
         fit_window.run()
@@ -146,7 +147,7 @@ class MainWindow(Window):
 
     # utilities for drawing
     def _setup_fig_sub(self):
-        """Sets up the figure and subplot for the right-hand canvas.
+        """Sets up `self.fig` and `self.sub` for the right-hand canvas.
         """
         self.fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
         self.sub = self.fig.add_subplot(111)
@@ -167,16 +168,16 @@ class MainWindow(Window):
         plt.close("all")
 
     def _add_to_plot(self):
-        """This method is used for adding a new PDF to existing plots. The new PDF has to be the last element in
-        `self.pdfs`. Replaces the old `self.fig_agg`.
+        """This method is used for adding a new PDF to existing plots. The new :class:`PDF` has to be the last element
+        in `self.pdfs`. Replaces the old `self.fig_agg`.
         """
         self._delete_fig()
         self.sub.plot(self.pdfs[-1].r, self.pdfs[-1].g * self.pdfs[-1].scaling_factor)
         self._draw_figure()
 
     def _draw_new_plot(self):
-        """This method is used for drawing an entirely new plot with all the PDFs in `self.pdfs`. Replaces the old
-        `self.fig_agg`."""
+        """This method is used for drawing an entirely new plot with all the :class:`PDF` objects in `self.pdfs`.
+        Replaces the old `self.fig_agg`."""
         self._delete_fig()
         self._setup_fig_sub()
         for p in self.pdfs:
@@ -186,10 +187,10 @@ class MainWindow(Window):
 
 
 class DiffWindow(Window):
-    """Window for calculating dPDFs. Lets you select two PDFs from `pdfs` and returns the dPDF after hitting the OK
-    button.
+    """Window for calculating dPDFs. Lets you select two :class:`PDF` from `pdfs` and returns the dPDF after hitting the
+    OK button. Uses :method:`PDF.differential_pdf`.
 
-    :param pdfs: PDFs to select from for calculating the dPDF.
+    :param pdfs: :class`PDF` objects to select from for calculating the dPDF.
     :type pdfs: List[PDF]
     """
 
@@ -200,7 +201,8 @@ class DiffWindow(Window):
                           [sg.Button("OK", key="-DIFF_BUTTON-")]], "dPDF")
 
     def run(self) -> Optional[PDF]:
-        """The event loop for the :class:``DiffWindow``. Returns the dPDF after selecting two PDFs and hitting OK.
+        """The event loop for the :class:``DiffWindow``. Returns the dPDF after selecting two :class:`PDF` objects and
+        hitting OK. Uses :method:`PDF.differential_pdf`.
 
         :return: The dPDF if the user hits OK. Otherwise, returns `None`.
         :rtype: Optional[PDF]
@@ -231,8 +233,8 @@ class DiffWindow(Window):
 
 
 class FitWindow(Window):
-    """Window for fitting a PDF to another PDF via scaling. Scales `pdf_to_fit` in place. Lets you select PDF to fit to
-    from `pdfs`.
+    """Window for fitting a :class:`PDF` objects to another :class:`PDF` object via scaling. Scales `pdf_to_fit` in
+    place. Lets you select :class:`PDF` to fit to from `pdfs`. Uses :method:`PDF.scale_to_pdf`.
 
     :param pdfs: list of PDFs to choose the PDF to fit to.
     :type pdfs: List[PDF]
@@ -248,7 +250,8 @@ class FitWindow(Window):
                           [sg.Button("OK", key="-FIT_BUTTON-")]], "Scale to...")
 
     def run(self):
-        """Event loop for :class:``FitWindow``. Performs the fitting after the user hits the OK button.
+        """Event loop for :class:``FitWindow``. Performs the fitting after the user hits the OK button. Uses
+        :method:`PDF.scale_to_pdf`.
         """
         run_window = True
 
