@@ -47,38 +47,39 @@ class MainWindow(Window):
                          finalize=True, resizable=True)
         self._draw_figure()
         self.pdf: Optional[PDF] = None
+        self.event = self.values = None
 
     def run(self):
         run_window = True
 
         while run_window:
-            event, values = self.window.read()
+            self.event, self.values = self.window.read()
 
-            if event == "Exit" or event == sg.WIN_CLOSED:
+            if self.event == "Exit" or self.event == sg.WIN_CLOSED:
                 # exit window
                 run_window = False
                 break
-            elif event == "-IMPORT_BUTTON-":
+            elif self.event == "-IMPORT_BUTTON-":
                 # import new PDF from file
                 self._import_pdf()
-            elif event == "-DIFF_BUTTON-":
+            elif self.event == "-DIFF_BUTTON-":
                 # calculate differential PDF
                 self._calc_diff_pdf()
-            elif event == "-SCALE_BUTTON-":
+            elif self.event == "-SCALE_BUTTON-":
                 # scale a PDF to a multiple of itself
                 self._scale_pdf()
-            elif event == "-FIT_BUTTON-":
+            elif self.event == "-FIT_BUTTON-":
                 # fit the selected PDF to another one via scaling
                 try:
-                    self.pdf: PDF = values["-PDF_LIST-"][0]
+                    self.pdf: PDF = self.values["-PDF_LIST-"][0]
                     self._fit_to_pdf()
                 except IndexError:
                     sg.popup_error("Select a PDF to scale.")
-            elif event == "-SAVE_PATH-":
+            elif self.event == "-SAVE_PATH-":
                 # save the selected PDF
                 try:
-                    self.pdf: PDF = values["-PDF_LIST-"][0]
-                    self.pdf.save_gr_file(values["-SAVE_PATH-"])
+                    self.pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self.pdf.save_gr_file(self.values["-SAVE_PATH-"])
                 except IndexError as e:
                     sg.popup_error("Select a PDF to save.")
 
@@ -97,7 +98,13 @@ class MainWindow(Window):
         self._add_to_plot()
 
     def _scale_pdf(self):
-        raise NotImplementedError()
+        try:
+            pdf_to_scale: PDF = self.values["-PDF_LIST-"][0]
+        except IndexError:
+            sg.popup_error("Choose a PDF to scale.")
+            return
+        pdf_to_scale.scale(float(self.values["-SCALE_IN-"]))
+        self._draw_new_plot()
 
     def _fit_to_pdf(self):
         raise NotImplementedError()
@@ -120,6 +127,14 @@ class MainWindow(Window):
     def _add_to_plot(self):
         self._delete_fig()
         self.sub.plot(self.pdfs[-1].r, self.pdfs[-1].g * self.pdfs[-1].scaling_factor)
+        self._draw_figure()
+
+    def _draw_new_plot(self):
+        self._delete_fig()
+        self._setup_fig_sub()
+        for p in self.pdfs:
+            self.sub.plot(p.r, p.g * p.scaling_factor)
+
         self._draw_figure()
 
 
