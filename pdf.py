@@ -4,6 +4,7 @@ import numpy.typing as npt
 from typing import Optional, List
 from scipy.optimize import minimize_scalar
 import re
+import json
 
 
 class XAxisException(Exception):
@@ -91,7 +92,7 @@ class PDF:
         """
         self.scaling_factor = factor
 
-    def distance(self, other: 'PDF') -> float:
+    def get_distance(self, other: 'PDF') -> float:
         """Calculates the distance between the :class:`PDF` and another via squared distance. Raises a
         class:`XAxisException` if the r ranges of the PDFs are not equal.
 
@@ -99,7 +100,7 @@ class PDF:
         :type other: :class:`PDF`
         :return: The squared distance between the :class:`PDF` objects.
         :rtype: float
-        :raises XAxisException: If the r ranges of the  PDFs are not equal.
+        :raises `XAxisException`: If the r ranges of the  PDFs are not equal.
         """
         if np.array_equal(self.r, other.r):
             dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
@@ -120,7 +121,7 @@ class PDF:
         :type start: Optional[float]
         :param end: r value where to end the fit.
         :type end: Optional[float]
-        :raises XAxisException: If the r ranges of the PDFs are not equal between start and end.
+        :raises `XAxisException`: If the r ranges of the PDFs are not equal between start and end.
         """
 
         def _distance_with_factor(factor: float, x: np.ndarray, y: np.ndarray) -> float:
@@ -153,7 +154,7 @@ class PDF:
         
         :param path: The path to save the .gr-file to. Has to contain the file-extension.
         :type path: str
-        :raises FileExistsError: If the file already exists.
+        :raises `FileExistsError`: If the file already exists.
         """
         if not os.path.exists(path):
             with open(path, "a") as f:
@@ -161,6 +162,32 @@ class PDF:
                     f.write(f"{x} {y}\n")
         else:
             raise FileExistsError("The file your about to write to already exists.")
+
+    @property
+    def json(self) -> str:
+        """Returns all the object parameters in JSON format.
+
+        :return: A JSON string containing all the object parameters.
+        :rtype: str
+        """
+        object_dict: dict = {"r": self.r.tolist(), "g": self.g.tolist(), "name": self.name,
+                             "scaling_factor": self.scaling_factor}
+        json_str: str = json.dumps(object_dict)
+        return json_str
+
+    @json.setter
+    def json(self, json_str: str):
+        """Sets all object parameters according to the JSON string provided. `json_str` has to contain r
+        (:class:`npt.ArrayLike`), g (:class:`npt.ArrayLike`), name (`str`) and scaling_factor (`float`).
+
+        :param json_str: A JSON string containing all object parameters.
+        :type json_str: str
+        """
+        json_dict: dict = json.loads(json_str)
+        self.r = np.array(json_dict["r"])
+        self.g = np.array(json_dict["g"])
+        self.name = json_dict["name"]
+        self.scaling_factor = json_dict["scaling_factor"]
 
     @staticmethod
     def differential_pdf(pdf1: 'PDF', pdf2: 'PDF') -> 'PDF':
@@ -173,7 +200,7 @@ class PDF:
         :type pdf2: :class:`PDF`
         :return: The differential PDF.
         :rtype: :class:`PDF`
-        :raises XAxisException: If the r ranges of the provided PDFs are not equal.
+        :raises `XAxisException`: If the r ranges of the provided PDFs are not equal.
         """
         if np.array_equal(pdf1.r, pdf2.r):
             g: np.ndarray = pdf1.g * pdf1.scaling_factor - pdf2.g * pdf2.scaling_factor
@@ -187,9 +214,9 @@ class PDF:
         the second column with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
         Uses the base filename without extension for `PDF.name`.
 
-        :param path: the path to the .gr-file to read from.
+        :param path: The path to the .gr-file to read from.
         :type path: str
-        :return: the PDF that is read from the file with name of the file without extension.
+        :return: The PDF that is read from the file with name of the file without extension.
         :rtype: :class:`PDF`
         """
 
@@ -219,3 +246,23 @@ class PDF:
         name: str = os.path.basename(path).split(".")[0]  # filename without extension
 
         return PDF(r, g, name)
+
+    @staticmethod
+    def from_json(json_str: str) -> 'PDF':
+        """Creates a :class:`PDF` object from a JSON string. The JSON string has to contain r (:class:`npt.ArrayLike`),
+        g (:class:`npt.ArrayLike`), name (`str`) and scaling_factor (`float`).
+
+        :param json_str: The JSON string to convert to :class:`PDF` object.
+        :type json_str: str
+        :return: The :class:`PDF` object generated from the JSON string.
+        :rtype: :class:`PDF`
+        """
+        json_dict: dict = json.loads(json_str)
+        r: npt.ArrayLike = json_dict["r"]
+        g: npt.ArrayLike = json_dict["g"]
+        name: str = json_dict["name"]
+        scaling_factor: float = json_dict["scaling_factor"]
+
+        pdf = PDF(r, g, name)
+        pdf.scaling_factor = scaling_factor
+        return pdf
