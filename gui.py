@@ -48,7 +48,7 @@ class MainWindow(Window):
             [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-", expand_x=True),
              sg.FileBrowse()],
             [sg.Listbox(values=self.pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-", expand_x=True,
-                        expand_y=True)],
+                        expand_y=True, right_click_menu=["Doesnt matter", ["Delete"]])],
             [sg.Frame("File IO", [[sg.Button("Import", key="-IMPORT_BUTTON-"),
                                    sg.InputText(visible=False, enable_events=True, key="-SAVE_PATH-"),
                                    # gets the filename from save dialog
@@ -103,6 +103,13 @@ class MainWindow(Window):
                     self.pdf.save_gr_file(self.values["-SAVE_PATH-"])
                 except IndexError:
                     sg.popup_error("Select a PDF to save.")
+            elif self.event == "Delete":
+                # delete the selected PDF
+                try:
+                    self.pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self._delete_pdf()
+                except IndexError:
+                    pass
 
         self.window.close()
 
@@ -185,6 +192,12 @@ class MainWindow(Window):
 
         self._draw_figure()
 
+    # working with PDF list
+    def _delete_pdf(self):
+        self.pdfs.remove(self.values["-PDF_LIST-"][0])
+        del self.values["-PDF_LIST-"][0]
+        self.window["-PDF_LIST-"].update(self.pdfs)
+
 
 class DiffWindow(Window):
     """Window for calculating dPDFs. Lets you select two :class:`PDF` from `pdfs` and returns the dPDF after hitting the
@@ -241,6 +254,7 @@ class FitWindow(Window):
     :param pdf_to_fit: the PDF to fit.
     :type pdf_to_fit: :class:``PDF``
     """
+
     def __init__(self, pdfs: List[PDF], pdf_to_fit: PDF):
         self.pdf_to_fit: PDF = pdf_to_fit
         super().__init__([[sg.Text("Choose a PDF to scale to.")],
