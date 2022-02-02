@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from pdf import PDF, XAxisException
 import json
+import zlib
 
 sg.theme("SystemDefault")
 matplotlib.use("TkAgg")
@@ -118,8 +119,10 @@ class MainWindow(Window):
                 except IndexError:
                     pass
             elif self.event == "-PROJECT_SAVE_PATH-":
+                # save project as a whole
                 self._save_project(self.values["-PROJECT_SAVE_PATH-"])
             elif self.event == "-PROJECT_LOAD_PATH-":
+                # load project as a whole
                 self._load_project(self.values["-PROJECT_LOAD_PATH-"])
 
         self.window.close()
@@ -214,23 +217,29 @@ class MainWindow(Window):
 
     # working with projects
     def _save_project(self, path):
-        """Saves the :class:`PDF` objects in `self.pdfs` in a JSON array. Saves the data to the provided path.
+        """Saves the :class:`PDF` objects in `self.pdfs` in a zlib compressed JSON array. Saves the data to the provided
+        path.
 
         :param path: The path where to save.
         :type path: str
         """
         data: List[str] = [pdf.json for pdf in self.pdfs]
         data_json: str = json.dumps(data)
-        with open(path, "w") as f:
-            f.write(data_json)
+        data_json_bytes: bytes = zlib.compress(data_json.encode())
+        with open(path, "wb") as f:
+            f.write(data_json_bytes)
 
     def _load_project(self, path):
-        """Loads a project from the provided path. The project data has to be a JSON array containing data that can be
-        read by :method:`PDF.from_json`. Creates :class:`PDF` objects from the JSON and saves them in `self.pdfs`.
-        Updates the window afterwards.
+        """Loads a project from the provided path. The project data has to be a zlib compressed JSON array containing
+        data that can be read by :method:`PDF.from_json`. Creates :class:`PDF` objects from the JSON and saves them in
+        `self.pdfs`. Updates the window afterwards.
+
+        :param path: The path where to load from.
+        :type path: str
         """
-        with open(path, "r") as f:
-            data_json: str = f.read()
+        with open(path, "rb") as f:
+            data_json_bytes: bytes = f.read()
+        data_json: str = zlib.decompress(data_json_bytes).decode()
         data: List[str] = json.loads(data_json)
         self.pdfs = [PDF.from_json(json_str) for json_str in data]
         self.window["-PDF_LIST-"].update(self.pdfs)
