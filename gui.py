@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
 from pdf import PDF, XAxisException
+import json
 
 sg.theme("SystemDefault")
 matplotlib.use("TkAgg")
@@ -49,12 +50,18 @@ class MainWindow(Window):
              sg.FileBrowse()],
             [sg.Listbox(values=self.pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-", expand_x=True,
                         expand_y=True, right_click_menu=["Doesnt matter", ["Delete"]])],
-            [sg.Frame("File IO", [[sg.Button("Import", key="-IMPORT_BUTTON-"),
+            [sg.Frame("File IO", [[sg.Button("Import PDF", key="-IMPORT_BUTTON-"),
                                    sg.InputText(visible=False, enable_events=True, key="-SAVE_PATH-"),
                                    # gets the filename from save dialog
-                                   sg.FileSaveAs(file_types=((".gr-Files", ".gr"), ("ALL Files", ".*")),
+                                   sg.FileSaveAs("Save PDF", file_types=((".gr-Files", ".gr"), ("ALL Files", ".*")),
                                                  default_extension=".gr",
-                                                 key="-SAVE_BUTTON-")]])],
+                                                 key="-SAVE_BUTTON-"),
+                                   sg.InputText(visible=False, enable_events=True, key="-PROJECT_LOAD_PATH-"),
+                                   sg.FileBrowse("Load Project", key="-PROJECT_LOAD_BUTTON-"),
+                                   sg.InputText(visible=False, enable_events=True, key="-PROJECT_SAVE_PATH-"),
+                                   sg.FileSaveAs("Save Project",
+                                                 file_types=((".pvp-Files", ".pvp"), ("ALL Files", ".*")),
+                                                 default_extension=".pvp", key="-PROJECT_SAVE_BUTTON-")]])],
             [sg.Frame("Combine PDFs",
                       [[sg.Button("dPDF", key="-DIFF_BUTTON-"), sg.Button("Scale to...", key="-FIT_BUTTON-")]])]
         ]
@@ -110,6 +117,10 @@ class MainWindow(Window):
                     self._delete_pdf()
                 except IndexError:
                     pass
+            elif self.event == "-PROJECT_SAVE_PATH-":
+                self._save_project(self.values["-PROJECT_SAVE_PATH-"])
+            elif self.event == "-PROJECT_LOAD_PATH-":
+                self._load_project(self.values["-PROJECT_LOAD_PATH-"])
 
         self.window.close()
 
@@ -194,9 +205,36 @@ class MainWindow(Window):
 
     # working with PDF list
     def _delete_pdf(self):
+        """Deletes the :class:`PDF` object selected in `self.values['-PDF_LIST-']` from `self.pdfs` and removes it from
+        memory.
+        """
         self.pdfs.remove(self.values["-PDF_LIST-"][0])
         del self.values["-PDF_LIST-"][0]
         self.window["-PDF_LIST-"].update(self.pdfs)
+
+    # working with projects
+    def _save_project(self, path):
+        """Saves the :class:`PDF` objects in `self.pdfs` in a JSON array. Saves the data to the provided path.
+
+        :param path: The path where to save.
+        :type path: str
+        """
+        data: List[str] = [pdf.json for pdf in self.pdfs]
+        data_json: str = json.dumps(data)
+        with open(path, "w") as f:
+            f.write(data_json)
+
+    def _load_project(self, path):
+        """Loads a project from the provided path. The project data has to be a JSON array containing data that can be
+        read by :method:`PDF.from_json`. Creates :class:`PDF` objects from the JSON and saves them in `self.pdfs`.
+        Updates the window afterwards.
+        """
+        with open(path, "r") as f:
+            data_json: str = f.read()
+        data: List[str] = json.loads(data_json)
+        self.pdfs = [PDF.from_json(json_str) for json_str in data]
+        self.window["-PDF_LIST-"].update(self.pdfs)
+        self._draw_new_plot()
 
 
 class DiffWindow(Window):
