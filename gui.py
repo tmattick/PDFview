@@ -45,6 +45,8 @@ class MainWindow(Window):
 
     def __init__(self):
         self.pdfs: List[PDF] = []
+        self.pdf: Optional[PDF] = None
+        self.event = self.values = None
         self._setup_fig_sub()
         self.left_layout = [
             [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-", expand_x=True),
@@ -68,13 +70,14 @@ class MainWindow(Window):
         ]
         self.right_layout = [
             [sg.Canvas(size=(60, 60), key="-CANVAS-", expand_x=True, expand_y=True)],
-            [sg.Text("Scaling Factor:"), sg.In(size=(3, 1), key="-SCALE_IN-"), sg.Button("OK", key="-SCALE_BUTTON-")]]
+            [sg.Text("Scaling Factor:"), sg.In(size=(3, 1), key="-SCALE_IN-"), sg.Button("OK", key="-SCALE_BUTTON-")],
+            [sg.Frame("Current PDF",
+                      [[sg.Text(f"Name: ", key="-NAME_TEXT-")],
+                       [sg.Text(f"Scaling Factor: ", key="-FACTOR_TEXT-")]])]]
         super().__init__(layout=[[sg.Column(self.left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
                                   sg.Column(self.right_layout, expand_x=True, expand_y=True)]], title="PDFview",
                          finalize=True, resizable=True)
         self._draw_figure()
-        self.pdf: Optional[PDF] = None
-        self.event = self.values = None
 
     def run(self):
         """The main event loop of :class:`MainWindow`. Terminates only when the user closes the window.
@@ -97,6 +100,7 @@ class MainWindow(Window):
             elif self.event == "-SCALE_BUTTON-":
                 # scale a PDF to a multiple of itself
                 self._scale_pdf()
+                self._update_pdf_info()
             elif self.event == "-FIT_BUTTON-":
                 # fit the selected PDF to another one via scaling
                 try:
@@ -104,6 +108,7 @@ class MainWindow(Window):
                     self._fit_to_pdf()
                 except IndexError:
                     sg.popup_error("Select a PDF to scale.")
+                self._update_pdf_info()
             elif self.event == "-SAVE_PATH-":
                 # save the selected PDF
                 try:
@@ -118,12 +123,16 @@ class MainWindow(Window):
                     self._delete_pdf()
                 except IndexError:
                     pass
+                self._update_pdf_info()
             elif self.event == "-PROJECT_SAVE_PATH-":
                 # save project as a whole
                 self._save_project(self.values["-PROJECT_SAVE_PATH-"])
             elif self.event == "-PROJECT_LOAD_PATH-":
                 # load project as a whole
                 self._load_project(self.values["-PROJECT_LOAD_PATH-"])
+            elif self.event == "-PDF_LIST-":
+                # PDF is selected from PDF list
+                self._update_pdf_info()
 
         self.window.close()
 
@@ -214,6 +223,14 @@ class MainWindow(Window):
         self.pdfs.remove(self.values["-PDF_LIST-"][0])
         del self.values["-PDF_LIST-"][0]
         self.window["-PDF_LIST-"].update(self.pdfs)
+
+    def _update_pdf_info(self):
+        """Sets `self.pdf` to the currently selected :class:`PDF` object and updates the information in
+        `self.window['-NAME_TEXT-']` and `self.window['-FACTOR_TEXT-'] with the information about the selected PDF.
+        """
+        self.pdf = self.values["-PDF_LIST-"][0]
+        self.window["-NAME_TEXT-"].update(f"Name: {self.pdf.name}")
+        self.window["-FACTOR_TEXT-"].update(f"Scaling Factor: {self.pdf.scaling_factor}")
 
     # working with projects
     def _save_project(self, path):
