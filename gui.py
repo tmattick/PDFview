@@ -190,6 +190,7 @@ class MainWindow(Window):
         self.fig_agg = FigureCanvasTkAgg(self.fig, self.window["-CANVAS-"].TKCanvas)
         self.fig_agg.draw()
         self.fig_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
+        self.fig.legend()
 
     def _delete_fig(self):
         """Deletes `self.fig_agg`.
@@ -202,7 +203,7 @@ class MainWindow(Window):
         in `self.pdfs`. Replaces the old `self.fig_agg`.
         """
         self._delete_fig()
-        self.sub.plot(self.pdfs[-1].r, self.pdfs[-1].g * self.pdfs[-1].scaling_factor)
+        self.sub.plot(self.pdfs[-1].r, self.pdfs[-1].g * self.pdfs[-1].scaling_factor, label=self.pdfs[-1].name)
         self._draw_figure()
 
     def _draw_new_plot(self):
@@ -211,7 +212,7 @@ class MainWindow(Window):
         self._delete_fig()
         self._setup_fig_sub()
         for p in self.pdfs:
-            self.sub.plot(p.r, p.g * p.scaling_factor)
+            self.sub.plot(p.r, p.g * p.scaling_factor, label=p.name)
 
         self._draw_figure()
 
