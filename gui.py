@@ -74,7 +74,10 @@ class MainWindow(Window):
             [sg.Frame("Current PDF",
                       [[sg.Text(f"Name: ", key="-NAME_TEXT-")],
                        [sg.Text(f"Scaling Factor: ", key="-FACTOR_TEXT-")]])]]
-        super().__init__(layout=[[sg.Column(self.left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
+        self.menu_layout = [["&File", ["&Open::Open_Project", "&Save::Save_Project"]],
+                            ["&Help", ["&About"]]]
+        super().__init__(layout=[[sg.Menu(self.menu_layout)],
+                                 [sg.Column(self.left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
                                   sg.Column(self.right_layout, expand_x=True, expand_y=True)]], title="PDFview",
                          finalize=True, resizable=True)
         self._draw_figure()
