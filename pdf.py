@@ -178,6 +178,24 @@ class PDF:
             index = self.r.size
         return index
 
+    def _add_point_linear(self, x: float):
+        """Add a point to the `PDF` by taking the neighboring points on each side and extrapolating them linearly.
+
+        :param x: The x value of the point that will be added.
+        :type x: float
+        """
+        rmax_index: int = self._get_rmax_index(x)
+        rmin_index: int = self._get_rmin_index(x)
+        x1: float = self.r[rmax_index]
+        x2: float = self.r[rmin_index]
+        y1: float = self.g[rmax_index]
+        y2: float = self.g[rmin_index]
+        m: float = (y2 - y1) / (x2 - x1)
+        y: float = m * x + (y1 - x1 * m)
+        self.r = np.insert(self.r, rmin_index, x)
+        self.g = np.insert(self.g, rmin_index, y)
+
+
     def scale(self, factor: float):
         """Scales the :class:`PDF` by multiplying `self.g` with the `factor` given.
         
