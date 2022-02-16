@@ -192,6 +192,10 @@ class PDF:
         y2: float = self.g[rmin_index]
         m: float = (y2 - y1) / (x2 - x1)
         y: float = m * x + (y1 - x1 * m)
+        if self.r.dtype == int and isinstance(x, float):
+            self.r = self.r.astype(float)
+        if self.g.dtype == int and isinstance(y, float):
+            self.g = self.g.astype(float)
         self.r = np.insert(self.r, rmin_index, x)
         self.g = np.insert(self.g, rmin_index, y)
 
