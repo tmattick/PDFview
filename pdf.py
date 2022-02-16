@@ -38,6 +38,17 @@ class PDF:
         self.name = name
         self.scaling_factor: float = 1
 
+    def _x_axes_compatible(self, other: 'PDF') -> bool:
+        """Returns whether the x axes of the given `PDF` objects are compatible, meaning they have equal size and all
+        the values are close via `np.allclose`.
+
+        :param other: The :class:`PDF` object to compare to.
+        :type other: `PDF`
+        :return: True, if x axes of the PDFs have equal size and all the values are close. False otherwise.
+        :rtype: bool
+        """
+        return self.r.size == other.r.size and np.allclose(self.r, other.r, rtol=0)
+
     def __eq__(self, other: 'PDF') -> bool:
         """Returns whether r and g of the given PDFs are equal.
         
@@ -46,8 +57,9 @@ class PDF:
         :return: True, if r and g arrays are equal, False otherwise.
         :rtype: bool
         """
-        return np.array_equal(self.r, other.r) and np.array_equal(self.g * self.scaling_factor,
-                                                                  other.g * other.scaling_factor)
+        return self.r.size == other.r.size and self.g.size == other.g.size and np.allclose(self.r, other.r,
+                                                                                           rtol=0) and np.allclose(
+            self.g * self.scaling_factor, other.g * other.scaling_factor, rtol=0)
 
     def __ne__(self, other: 'PDF') -> bool:
         """Returns whether r and g of the given PDFs are unequal.
@@ -73,7 +85,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if np.array_equal(self.r, other.r):
+        if self._x_axes_compatible(other):
             return PDF(self.r, self.g + other.g, f"{self.name} + {other.name}")
         else:
             raise XAxisException(self.r, other.r)
@@ -88,7 +100,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if np.array_equal(self.r, other.r):
+        if self._x_axes_compatible(other):
             self.g = self.g + other.g
             return self
         else:
@@ -105,7 +117,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if np.array_equal(self.r, other.r):
+        if self._x_axes_compatible(other):
             return PDF(self.r, self.g - other.g, f"{self.name} - {other.name}")
         else:
             raise XAxisException(self.r, other.r)
@@ -120,7 +132,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if np.array_equal(self.r, other.r):
+        if self._x_axes_compatible(other):
             self.g = self.g - other.g
             return self
         else:
@@ -184,7 +196,7 @@ class PDF:
         :rtype: float
         :raises `XAxisException`: If the r ranges of the  PDFs are not equal.
         """
-        if np.array_equal(self.r, other.r):
+        if self._x_axes_compatible(other):
             dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
             dist_array = np.square(dist_array)
             dist: float = np.sum(dist_array)
@@ -221,7 +233,8 @@ class PDF:
         start_i_other: int = other._get_rmin_index(start)
         end_i_self: int = self._get_rmax_index(end)
         end_i_other: int = other._get_rmax_index(end)
-        if np.array_equal(self.r[start_i_self:end_i_self], other.r[start_i_other:end_i_other]):
+        if self.r[start_i_self:end_i_self].size == other.r[start_i_other:end_i_other].size and np.allclose(
+                self.r[start_i_self:end_i_self], other.r[start_i_other:end_i_other], rtol=0):
             res = minimize_scalar(_distance_with_factor, args=(
                 self.g[start_i_self:end_i_self], other.g[start_i_other:end_i_other] * other.scaling_factor),
                                   method="Brent")
@@ -284,7 +297,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the provided PDFs are not equal.
         """
-        if np.array_equal(pdf1.r, pdf2.r):
+        if pdf1._x_axes_compatible(pdf2):
             g: np.ndarray = pdf1.g * pdf1.scaling_factor - pdf2.g * pdf2.scaling_factor
             return PDF(pdf1.r, g, f"{pdf1} - {pdf2}")
         else:
