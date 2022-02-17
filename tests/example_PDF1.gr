@@ -1,0 +1,50 @@
+[DEFAULT]
+
+version = diffpy.pdfgetx-2.1.2
+
+# input and output specifications
+dataformat = twotheta
+inputfile = TM-001_2theta_0-90.xy
+backgroundfile =
+outputtype = gr
+
+# PDF calculation setup
+mode = xray
+wavelength = 0.7093
+twothetazero = 0
+composition = SiO2
+bgscale = 1
+rpoly = 0.9
+qmaxinst = 12.5259
+qmin = 0
+qmax = 12.5259
+rmin = 0
+rmax = 30
+rstep = 0.01
+
+# End of config --------------------------------------------------------------
+
+#### start data
+#S 1
+#L r(Å)  G(Å$^{-2}$)
+0 0
+0.01 0.000792929
+0.02 0.00157326
+0.03 0.00233019
+0.04 0.00305358
+0.05 0.00373171
+0.06 0.00436159
+0.07 0.00494015
+0.08 0.00546591
+0.09 0.0059399
+0.1 0.00637202
+0.11 0.00677166
+0.12 0.00715094
+0.13 0.00752721
+0.14 0.00791951
+0.15 0.00834747
+0.16 0.00883532
+0.17 0.0094082
+0.18 0.0100848
+0.19 0.0108853
+0.2 0.0118365
