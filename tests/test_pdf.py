@@ -1,3 +1,7 @@
+import sys
+import os.path
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 from pdf import PDF, XAxisException
 
@@ -208,7 +212,7 @@ def test_scale_to_pdf1():
     """Test `PDF.scale_to_pdf` for equal PDF.
     """
     test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
-    test_pdf1.scale_to_pdf(test_pdf1, start = None, end = None)
+    test_pdf1.scale_to_pdf(test_pdf1, start=None, end=None)
     assert test_pdf1.scaling_factor == 1 and test_pdf1 == PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
 
 
@@ -217,15 +221,16 @@ def test_scale_to_pdf2():
     """
     test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
     test_pdf6 = PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
-    test_pdf1.scale_to_pdf(test_pdf6, start = None, end = None)
+    test_pdf1.scale_to_pdf(test_pdf6, start=None, end=None)
     assert test_pdf1.scaling_factor == 2 and test_pdf1 == PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
+
 
 def test_scale_to_pdf3():
     """Test `PDF.scale_to_pdf` for differing PDF with startpoint and endpoint.
     """
     test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
     test_pdf6 = PDF([1, 2, 3, 4, 5], [1000, 8, 6, 4, 8000])
-    test_pdf1.scale_to_pdf(test_pdf6, start = 2, end = 4)
+    test_pdf1.scale_to_pdf(test_pdf6, start=2, end=4)
     assert test_pdf1.scaling_factor == 2 and test_pdf1 == PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
 
 
