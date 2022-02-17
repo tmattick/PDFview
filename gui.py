@@ -1,12 +1,14 @@
-from typing import List, Optional
 from abc import ABC, abstractmethod
-import PySimpleGUI as sg
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
-import matplotlib
-from pdf import PDF, XAxisException
 import json
+from typing import List, Optional
 import zlib
+
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import PySimpleGUI as sg
+
+from pdf import PDF, XAxisException
 
 sg.theme("SystemDefault")
 matplotlib.use("TkAgg")

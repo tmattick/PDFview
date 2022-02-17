@@ -1,8 +1,9 @@
-import sys
 import os.path
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
+
 from pdf import PDF, XAxisException
 
 

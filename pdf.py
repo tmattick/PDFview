@@ -1,11 +1,12 @@
-import os
-import numpy as np
-import numpy.typing as npt
-from typing import Optional, List
-from scipy.optimize import minimize_scalar
-import re
 import json
 import math
+import os
+import re
+from typing import Optional, List
+
+import numpy as np
+import numpy.typing as npt
+from scipy.optimize import minimize_scalar
 
 
 class XAxisException(Exception):
