@@ -5,6 +5,7 @@ from typing import Optional, List
 from scipy.optimize import minimize_scalar
 import re
 import json
+import math
 
 
 class XAxisException(Exception):
@@ -177,6 +178,73 @@ class PDF:
         else:
             index = self.r.size
         return index
+
+    def _insert_point(self, x: float, y: float):
+        """Inserts a point (x,y) into `self.r` and `self.g` respectively.
+
+        :param x: The value to insert into `self.r`.
+        :type x: float
+        :param y: The value to insert into `self.g`.
+        :type y: float
+        """
+        index: int = self._get_rmin_index(x)
+        if self.r.dtype == int and isinstance(x, float):
+            self.r = self.r.astype(float)
+        if self.g.dtype == int and isinstance(y, float):
+            self.g = self.g.astype(float)
+        self.r = np.insert(self.r, index, x)
+        self.g = np.insert(self.g, index, y)
+
+    def _add_point_linear(self, x: float):
+        """Add a point to the `PDF` by taking the neighboring points on each side and extrapolating them linearly.
+
+        :param x: The x value of the point that will be added.
+        :type x: float
+        """
+        rmax_index: int = self._get_rmax_index(x)
+        rmin_index: int = self._get_rmin_index(x)
+        x1: float = self.r[rmax_index]
+        x2: float = self.r[rmin_index]
+        y1: float = self.g[rmax_index]
+        y2: float = self.g[rmin_index]
+        m: float = (y2 - y1) / (x2 - x1)
+        y: float = m * x + (y1 - x1 * m)
+        self._insert_point(x, y)
+
+    def _add_point_polynomial(self, x: float, degree: int):
+        """Add a point to the `PDF` object by taking the (degree + 1) neighboring points and extrapolating them to a
+        polynomial function. Calculate the value y of the function at x and insert x into `self.r`, y into `self.g`.
+
+        :param x: The x value of the point that will be added.
+        :type x: float
+        :param degree: The degree of the polynomial function that will be used for extrapolating.
+        :type degree: int
+        """
+        if degree >= 2 and isinstance(degree, int):
+            rmax_index: int = self._get_rmax_index(x)
+            rmin_index: int = self._get_rmin_index(x)
+            num_points: int = degree + 1  # n+1
+            x_values: List[float] = [self.r[index] for index in
+                                     range(rmax_index - math.floor(num_points / 2 - 0.5),
+                                           rmin_index + math.floor(num_points / 2))]
+            y_values: List[float] = [self.g[index] for index in
+                                     range(rmax_index - math.floor(num_points / 2 - 0.5),
+                                           rmin_index + math.floor(num_points / 2))]
+            x_matrix: np.ndarray = np.stack([x_values for _ in range(num_points)])
+            for i, row in enumerate(x_matrix):
+                x_matrix[i] = np.power(row, degree - i)
+            x_matrix = x_matrix.transpose()
+            a: np.ndarray = np.linalg.solve(x_matrix, y_values)
+            x_powers: np.ndarray = np.empty(num_points)
+            x_powers.fill(x)
+            x_powers = np.power(x_powers, np.arange(degree, -1, -1))
+            f: np.ndarray = np.multiply(a, x_powers)
+            y: float = np.sum(f)
+            self._insert_point(x, y)
+        elif degree == 1:
+            self._add_point_linear(x)
+        else:
+            raise ValueError("degree should be a positive integer.")
 
     def scale(self, factor: float):
         """Scales the :class:`PDF` by multiplying `self.g` with the `factor` given.

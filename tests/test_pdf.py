@@ -174,6 +174,19 @@ def test_rmax_index2():
     test_pdf6 = PDF([1, 1.5, 2, 2.5, 3], [5, 4, 3, 2, 1])
     assert test_pdf6._get_rmax_index(1.7) == 1
 
+def test_add_point_linear():
+    """Test whether `PDF._add_point_linear` adds a point when it is in the middle between neighboring points.
+    """
+    test_pdf3 = PDF([1, 2, 3, 4], [4, 3, 2, 1])
+    test_pdf3._add_point_linear(2.5)
+    assert test_pdf3 == PDF([1, 2, 2.5, 3, 4], [4, 3, 2.5, 2, 1])
+
+def test_add_point_linear2():
+    """Test whether `PDF._add_point_linear` adds a point when it is not in the middle between neighboring points.
+    """
+    test_pdf6 = PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
+    test_pdf6._add_point_linear(2.2)
+    assert test_pdf6 == PDF([1, 2, 2.2, 3, 4, 5], [10, 8, 7.6, 6, 4, 2])
 
 def test_scale1():
     """Test `PDF.scale` method for an integer.
