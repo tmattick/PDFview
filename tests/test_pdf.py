@@ -185,18 +185,18 @@ def test_insert_point():
 
 
 def test_add_point_linear():
-    """Test whether `PDF._add_point_linear` adds a point when it is in the middle between neighboring points.
+    """Test whether `PDF.add_point_linear` adds a point when it is in the middle between neighboring points.
     """
     test_pdf3 = PDF([1, 2, 3, 4], [4, 3, 2, 1])
-    test_pdf3._add_point_linear(2.5)
+    test_pdf3.add_point_linear(2.5)
     assert test_pdf3 == PDF([1, 2, 2.5, 3, 4], [4, 3, 2.5, 2, 1])
 
 
 def test_add_point_linear2():
-    """Test whether `PDF._add_point_linear` adds a point when it is not in the middle between neighboring points.
+    """Test whether `PDF.add_point_linear` adds a point when it is not in the middle between neighboring points.
     """
     test_pdf6 = PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
-    test_pdf6._add_point_linear(2.2)
+    test_pdf6.add_point_linear(2.2)
     assert test_pdf6 == PDF([1, 2, 2.2, 3, 4, 5], [10, 8, 7.6, 6, 4, 2])
 
 
@@ -205,8 +205,8 @@ def test_add_point_polynomial1():
     """
     test_pdf6 = PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
     test_pdf61 = PDF([1, 2, 3, 4, 5], [10, 8, 6, 4, 2])
-    test_pdf6._add_point_polynomial(2.2, 1)
-    test_pdf61._add_point_linear(2.2)
+    test_pdf6.add_point_polynomial(2.2, 1)
+    test_pdf61.add_point_linear(2.2)
     assert test_pdf6 == test_pdf61
 
 
@@ -215,7 +215,7 @@ def test_add_point_polynomial2():
     """
     test_pdf = PDF(list(range(11)), [-3, 0, 5, 12, 21, 32, 45, 60, 77, 96, 117])  # x^2+2x-3
     test_pdf1 = PDF([0, 1, 2, 3, 4, 4.7, 5, 6, 7, 8, 9, 10], [-3, 0, 5, 12, 21, 28.49, 32, 45, 60, 77, 96, 117])
-    test_pdf._add_point_polynomial(4.7, 2)
+    test_pdf.add_point_polynomial(4.7, 2)
     assert test_pdf == test_pdf1
 
 
@@ -225,7 +225,7 @@ def test_add_point_polynomial3():
     test_pdf = PDF(list(range(11)), [1, -6.5, -17, 14.5, 133, 383.5, 811, 1460.5, 2377, 3605.5, 5191])
     test_pdf1 = PDF([0, 1, 2, 3, 4, 5, 5.2, 6, 7, 8, 9, 10],
                     [1, -6.5, -17, 14.5, 133, 383.5, 453.4, 811, 1460.5, 2377, 3605.5, 5191])
-    test_pdf._add_point_polynomial(5.2, 3)
+    test_pdf.add_point_polynomial(5.2, 3)
     assert test_pdf == test_pdf1
 
 

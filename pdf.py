@@ -196,7 +196,7 @@ class PDF:
         self.r = np.insert(self.r, index, x)
         self.g = np.insert(self.g, index, y)
 
-    def _add_point_linear(self, x: float):
+    def add_point_linear(self, x: float):
         """Add a point to the `PDF` by taking the neighboring points on each side and extrapolating them linearly.
 
         :param x: The x value of the point that will be added.
@@ -212,7 +212,7 @@ class PDF:
         y: float = m * x + (y1 - x1 * m)
         self._insert_point(x, y)
 
-    def _add_point_polynomial(self, x: float, degree: int):
+    def add_point_polynomial(self, x: float, degree: int):
         """Add a point to the `PDF` object by taking the (degree + 1) neighboring points and extrapolating them to a
         polynomial function. Calculate the value y of the function at x and insert x into `self.r`, y into `self.g`.
 
@@ -247,7 +247,7 @@ class PDF:
             y = _solve_for_polynomial(x_values, y_values, degree)
             self._insert_point(x, y)
         elif degree == 1:
-            self._add_point_linear(x)
+            self.add_point_linear(x)
         else:
             raise ValueError("degree should be a positive integer.")
 
