@@ -221,6 +221,19 @@ class PDF:
         :param degree: The degree of the polynomial function that will be used for extrapolating.
         :type degree: int
         """
+        def _solve_for_polynomial(a_values, b_values, deg):
+            x_matrix = np.stack([a_values for _ in range(deg + 1)])
+            for i, row in enumerate(x_matrix):
+                x_matrix[i] = np.power(row, deg - i)
+            x_matrix = x_matrix.transpose()
+            a = np.linalg.solve(x_matrix, b_values)
+            x_powers = np.empty(deg + 1)
+            x_powers.fill(x)
+            x_powers = np.power(x_powers, np.arange(deg, -1, -1))
+            f = np.multiply(a, x_powers)
+            ans: float = np.sum(f)
+            return ans
+
         if degree >= 2 and isinstance(degree, int):
             rmax_index: int = self._get_rmax_index(x)
             rmin_index: int = self._get_rmin_index(x)
@@ -231,16 +244,7 @@ class PDF:
             y_values: List[float] = [self.g[index] for index in
                                      range(rmax_index - math.floor(num_points / 2 - 0.5),
                                            rmin_index + math.floor(num_points / 2))]
-            x_matrix: np.ndarray = np.stack([x_values for _ in range(num_points)])
-            for i, row in enumerate(x_matrix):
-                x_matrix[i] = np.power(row, degree - i)
-            x_matrix = x_matrix.transpose()
-            a: np.ndarray = np.linalg.solve(x_matrix, y_values)
-            x_powers: np.ndarray = np.empty(num_points)
-            x_powers.fill(x)
-            x_powers = np.power(x_powers, np.arange(degree, -1, -1))
-            f: np.ndarray = np.multiply(a, x_powers)
-            y: float = np.sum(f)
+            y = _solve_for_polynomial(x_values, y_values, degree)
             self._insert_point(x, y)
         elif degree == 1:
             self._add_point_linear(x)
