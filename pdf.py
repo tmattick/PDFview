@@ -29,14 +29,8 @@ class PDF:
     """
 
     def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF"):
-        if isinstance(r, np.ndarray):
-            self.r = r
-        else:
-            self.r = np.array(r)
-        if isinstance(r, np.ndarray):
-            self.g = g
-        else:
-            self.g = np.array(g)
+        self.r = np.array(r)
+        self.g = np.array(g)
         self.name = name
         self.scaling_factor: float = 1
 
