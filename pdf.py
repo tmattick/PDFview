@@ -29,8 +29,11 @@ class PDF:
     """
 
     def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF"):
-        self.r = np.array(r)
-        self.g = np.array(g)
+        if len(r) == len(g):
+            self.r = np.array(r)
+            self.g = np.array(g)
+        else:
+            raise ValueError(f"r and g arrays have to be of equal length. Length of r: {len(r)}, length of g: {len(g)}.")
         self.name = name
         self.scaling_factor: float = 1
 
