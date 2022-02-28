@@ -232,9 +232,15 @@ class MainWindow(Window):
         """Sets `self.pdf` to the currently selected :class:`PDF` object and updates the information in
         `self.window['-NAME_TEXT-']` and `self.window['-FACTOR_TEXT-'] with the information about the selected PDF.
         """
-        self.pdf = self.values["-PDF_LIST-"][0]
-        self.window["-NAME_TEXT-"].update(f"Name: {self.pdf.name}")
-        self.window["-FACTOR_TEXT-"].update(f"Scaling Factor: {self.pdf.scaling_factor}")
+        if self.values["-PDF_LIST-"]:
+            self.pdf = self.values["-PDF_LIST-"][0]
+            self.window["-NAME_TEXT-"].update(f"Name: {self.pdf.name}")
+            self.window["-FACTOR_TEXT-"].update(f"Scaling Factor: {self.pdf.scaling_factor}")
+        else:
+            # PDF list is empty
+            self.pdf = None
+            self.window["-NAME_TEXT-"].update("Name: ")
+            self.window["-FACTOR_TEXT-"].update("Scaling Factor: ")
 
     # working with projects
     def _save_project(self, path):
