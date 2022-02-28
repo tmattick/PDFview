@@ -124,6 +124,7 @@ class MainWindow(Window):
                 try:
                     self.pdf: PDF = self.values["-PDF_LIST-"][0]
                     self._delete_pdf()
+                    self._draw_new_plot()
                 except IndexError:
                     pass
                 self._update_pdf_info()
