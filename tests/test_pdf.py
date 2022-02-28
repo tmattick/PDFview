@@ -88,6 +88,15 @@ def test_add2():
     assert (test_pdf1 + test_pdf5) == PDF([1, 2, 3, 4, 5], [11, 8, 6, 4, 2])
 
 
+def test_add3():
+    """Test addition with scaling factor.
+    """
+    test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+    test_pdf5 = PDF([1, 2, 3, 4, 5], [6, 4, 3, 2, 1])
+    test_pdf5.scale(2)
+    assert (test_pdf1 + test_pdf5) == PDF([1, 2, 3, 4, 5], [17, 12, 9, 6, 3])
+
+
 def test_iadd1():
     """Test whether addition (+=) of two PDFs with differing length raises an `XAxisException`.
     """
@@ -104,6 +113,16 @@ def test_iadd2():
     test_pdf5 = PDF([1, 2, 3, 4, 5], [6, 4, 3, 2, 1])
     test_pdf1 += test_pdf5
     assert test_pdf1 == PDF([1, 2, 3, 4, 5], [11, 8, 6, 4, 2])
+
+
+def test_iadd3():
+    """Test addition (+=) with scaling factor.
+    """
+    test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+    test_pdf5 = PDF([1, 2, 3, 4, 5], [6, 4, 3, 2, 1])
+    test_pdf5.scale(2)
+    test_pdf1 += test_pdf5
+    assert test_pdf1 == PDF([1, 2, 3, 4, 5], [17, 12, 9, 6, 3])
 
 
 def test_sub1():
@@ -123,6 +142,15 @@ def test_sub2():
     assert (test_pdf1 - test_pdf5) == PDF([1, 2, 3, 4, 5], [-1, 0, 0, 0, 0])
 
 
+def test_sub3():
+    """Test subtraction with scaling factor.
+    """
+    test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+    test_pdf5 = PDF([1, 2, 3, 4, 5], [6, 4, 3, 2, 1])
+    test_pdf5.scale(2)
+    assert (test_pdf1 - test_pdf5) == PDF([1, 2, 3, 4, 5], [-7, -4, -3, -2, -1])
+
+
 def test_isub1():
     """Test whether subtraction (-=) of two PDFs with differing length raises an `XAxisException`.
     """
@@ -139,6 +167,16 @@ def test_isub2():
     test_pdf5 = PDF([1, 2, 3, 4, 5], [6, 4, 3, 2, 1])
     test_pdf1 -= test_pdf5
     assert test_pdf1 == PDF([1, 2, 3, 4, 5], [-1, 0, 0, 0, 0])
+
+
+def test_isub3():
+    """Test subtraction (-=) with scaling factor.
+    """
+    test_pdf1 = PDF([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+    test_pdf5 = PDF([1, 2, 3, 4, 5], [6, 4, 3, 2, 1])
+    test_pdf5.scale(2)
+    test_pdf1 -= test_pdf5
+    assert test_pdf1 == PDF([1, 2, 3, 4, 5], [-7, -4, -3, -2, -1])
 
 
 def test_len():

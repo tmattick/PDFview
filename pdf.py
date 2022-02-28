@@ -33,7 +33,8 @@ class PDF:
             self.r = np.array(r)
             self.g = np.array(g)
         else:
-            raise ValueError(f"r and g arrays have to be of equal length. Length of r: {len(r)}, length of g: {len(g)}.")
+            raise ValueError(
+                f"r and g arrays have to be of equal length. Length of r: {len(r)}, length of g: {len(g)}.")
         self.name = name
         self.scaling_factor: float = 1
 
@@ -85,7 +86,8 @@ class PDF:
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
         if self._x_axes_compatible(other):
-            return PDF(self.r, self.g + other.g, f"{self.name} + {other.name}")
+            return PDF(self.r, self.g * self.scaling_factor + other.g * other.scaling_factor,
+                       f"{self.name} + {other.name}")
         else:
             raise XAxisException(self.r, other.r)
 
@@ -100,7 +102,7 @@ class PDF:
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
         if self._x_axes_compatible(other):
-            self.g = self.g + other.g
+            self.g = self.g + other.g * (other.scaling_factor / self.scaling_factor)
             return self
         else:
             raise XAxisException(self.r, other.r)
@@ -117,7 +119,8 @@ class PDF:
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
         if self._x_axes_compatible(other):
-            return PDF(self.r, self.g - other.g, f"{self.name} - {other.name}")
+            return PDF(self.r, self.g * self.scaling_factor - other.g * other.scaling_factor,
+                       f"{self.name} - {other.name}")
         else:
             raise XAxisException(self.r, other.r)
 
@@ -132,7 +135,7 @@ class PDF:
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
         if self._x_axes_compatible(other):
-            self.g = self.g - other.g
+            self.g = self.g - other.g * (other.scaling_factor / self.scaling_factor)
             return self
         else:
             raise XAxisException(self.r, other.r)
@@ -218,6 +221,7 @@ class PDF:
         :param degree: The degree of the polynomial function that will be used for extrapolating.
         :type degree: int
         """
+
         def _solve_for_polynomial(a_values, b_values, deg):
             x_matrix = np.stack([a_values for _ in range(deg + 1)])
             for i, row in enumerate(x_matrix):
