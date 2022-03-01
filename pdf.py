@@ -222,7 +222,7 @@ class PDF:
         :type degree: int
         """
 
-        def _solve_for_polynomial(a_values, b_values, deg):
+        def _solve_for_polynomial(a_values: List[float], b_values: List[float], deg: int):
             x_matrix = np.stack([a_values for _ in range(deg + 1)])
             for i, row in enumerate(x_matrix):
                 x_matrix[i] = np.power(row, deg - i)
