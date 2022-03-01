@@ -300,10 +300,10 @@ class DiffWindow(Window):
                 run_window = False
                 break
             elif event == "-DIFF_BUTTON-":
-                try:
+                if values["-PDF_MINUENDS-"] and values["-PDF_SUBTRAHENDS-"]:
                     minuend: PDF = values["-PDF_MINUENDS-"][0]
                     subtrahend: PDF = values["-PDF_SUBTRAHENDS-"][0]
-                except IndexError:
+                else:
                     sg.popup_error("Please select a minuend and a subtrahend PDF.")
                     continue
                 try:
@@ -347,17 +347,17 @@ class FitWindow(Window):
                 run_window = False
                 break
             elif event == "-FIT_BUTTON-":
-                try:
+                if values["-FIT_TO_PDFS-"]:
                     fit_pdf: PDF = values["-FIT_TO_PDFS-"][0]
-                except IndexError:
+                else:
                     sg.popup_error("Please select a PDF to fit to.")
                     continue
 
-                if values["-FIT_START_IN-"] != "":
+                if values["-FIT_START_IN-"]:
                     fit_start: Optional[float] = float(values["-FIT_START_IN-"])
                 else:
                     fit_start = None
-                if values["-FIT_END_IN-"] != "":
+                if values["-FIT_END_IN-"]:
                     fit_end: Optional[float] = float(values["-FIT_END_IN-"])
                 else:
                     fit_end = None
