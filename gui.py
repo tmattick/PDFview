@@ -47,7 +47,7 @@ class MainWindow(Window):
 
     def __init__(self):
         self.pdfs: List[PDF] = []
-        self.pdf: Optional[PDF] = None
+        self.selected_pdf: Optional[PDF] = None
         self.event = self.values = None
         self._setup_fig_sub()
         self.left_layout = [
@@ -107,7 +107,7 @@ class MainWindow(Window):
             elif self.event == "-FIT_BUTTON-":
                 # fit the selected PDF to another one via scaling
                 try:
-                    self.pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
                     self._fit_to_pdf()
                 except IndexError:
                     sg.popup_error("Select a PDF to scale.")
@@ -115,14 +115,14 @@ class MainWindow(Window):
             elif self.event == "-SAVE_PATH-":
                 # save the selected PDF
                 try:
-                    self.pdf: PDF = self.values["-PDF_LIST-"][0]
-                    self.pdf.save_gr_file(self.values["-SAVE_PATH-"])
+                    self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self.selected_pdf.save_gr_file(self.values["-SAVE_PATH-"])
                 except IndexError:
                     sg.popup_error("Select a PDF to save.")
             elif self.event == "Delete":
                 # delete the selected PDF
                 try:
-                    self.pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
                     self._delete_pdf()
                     self._draw_new_plot()
                 except IndexError:
@@ -234,12 +234,12 @@ class MainWindow(Window):
         `self.window['-NAME_TEXT-']` and `self.window['-FACTOR_TEXT-'] with the information about the selected PDF.
         """
         if self.values["-PDF_LIST-"]:
-            self.pdf = self.values["-PDF_LIST-"][0]
-            self.window["-NAME_TEXT-"].update(f"Name: {self.pdf.name}")
-            self.window["-FACTOR_TEXT-"].update(f"Scaling Factor: {self.pdf.scaling_factor}")
+            self.selected_pdf = self.values["-PDF_LIST-"][0]
+            self.window["-NAME_TEXT-"].update(f"Name: {self.selected_pdf.name}")
+            self.window["-FACTOR_TEXT-"].update(f"Scaling Factor: {self.selected_pdf.scaling_factor}")
         else:
             # PDF list is empty
-            self.pdf = None
+            self.selected_pdf = None
             self.window["-NAME_TEXT-"].update("Name: ")
             self.window["-FACTOR_TEXT-"].update("Scaling Factor: ")
 
