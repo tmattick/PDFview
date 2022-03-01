@@ -106,27 +106,25 @@ class MainWindow(Window):
                 self._update_pdf_info()
             elif self.event == "-FIT_BUTTON-":
                 # fit the selected PDF to another one via scaling
-                try:
+                if self.values["-PDF_LIST-"]:
                     self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
                     self._fit_to_pdf()
-                except IndexError:
+                else:
                     sg.popup_error("Select a PDF to scale.")
                 self._update_pdf_info()
             elif self.event == "-SAVE_PATH-":
                 # save the selected PDF
-                try:
+                if self.values["-PDF_LIST-"]:
                     self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
                     self.selected_pdf.save_gr_file(self.values["-SAVE_PATH-"])
-                except IndexError:
+                else:
                     sg.popup_error("Select a PDF to save.")
             elif self.event == "Delete":
                 # delete the selected PDF
-                try:
+                if self.values["-PDF_LIST-"]:
                     self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
                     self._delete_pdf()
                     self._draw_new_plot()
-                except IndexError:
-                    pass
                 self._update_pdf_info()
             elif self.event == "-PROJECT_SAVE_PATH-":
                 # save project as a whole
@@ -163,13 +161,12 @@ class MainWindow(Window):
     def _scale_pdf(self):
         """Method for scaling :class:`PDF` objects. Draws a new plot with the scaled PDFs on the right-hand canvas.
         """
-        try:
+        if self.values["-PDF_LIST-"]:
             pdf_to_scale: PDF = self.values["-PDF_LIST-"][0]
-        except IndexError:
+            pdf_to_scale.scale(float(self.values["-SCALE_IN-"]))
+            self._draw_new_plot()
+        else:
             sg.popup_error("Choose a PDF to scale.")
-            return
-        pdf_to_scale.scale(float(self.values["-SCALE_IN-"]))
-        self._draw_new_plot()
 
     def _fit_to_pdf(self):
         """Method for scaling :class:`PDF` objects to another :class:`PDF` object. Opens a :class:`FitWindow` object
