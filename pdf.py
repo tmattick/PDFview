@@ -50,164 +50,6 @@ class PDF:
         self.name = name
         self.scaling_factor: float = 1
 
-    def _x_axes_compatible(self, other: 'PDF') -> bool:
-        """Returns whether the x axes of the given `PDF` objects are compatible, meaning they have equal size and all
-        the values are close via `np.allclose`.
-
-        :param other: The :class:`PDF` object to compare to.
-        :type other: `PDF`
-        :return: True, if x axes of the PDFs have equal size and all the values are close. False otherwise.
-        :rtype: bool
-        """
-        return self.r.size == other.r.size and np.allclose(self.r, other.r, rtol=0)
-
-    def __eq__(self, other: 'PDF') -> bool:
-        """Returns whether r and g of the given PDFs are equal.
-        
-        :param other: The :class:`PDF` to compare to.
-        :type other: `PDF`
-        :return: True, if r and g arrays are equal, False otherwise.
-        :rtype: bool
-        """
-        return self.r.size == other.r.size and self.g.size == other.g.size and np.allclose(self.r, other.r,
-                                                                                           rtol=0) and np.allclose(
-            self.g * self.scaling_factor, other.g * other.scaling_factor, rtol=0)
-
-    def __ne__(self, other: 'PDF') -> bool:
-        """Returns whether r and g of the given PDFs are unequal.
-
-        :param other: The :class:`PDF` to compare to.
-        :type other: `PDF`
-        :return: True, if r and g arrays are equal, False otherwise.
-        :rtype: bool
-        """
-        return not self == other
-
-    def __str__(self) -> str:
-        return self.name
-
-    def __add__(self, other: 'PDF') -> 'PDF':
-        """Returns a :class:`PDF` object with the same r values as the provided :class:`PDF` objects, g values are the
-        sum of the provided g values. `name` is '`self.name` + `other.name`'. Raises a `XAxisException` if r values are
-        not equal.
-
-        :param other: The :class:`PDF` object to add.
-        :type other: :class:`PDF`
-        :return: The sum of the PDFs.
-        :rtype: :class:`PDF`
-        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
-        """
-        if self._x_axes_compatible(other):
-            return PDF(self.r, self.g * self.scaling_factor + other.g * other.scaling_factor,
-                       f"{self.name} + {other.name}")
-        else:
-            raise XAxisException(self.r, other.r)
-
-    def __iadd__(self, other: 'PDF') -> 'PDF':
-        """Adds `other.g` to `self.g`, if `self.r` and `other.r` are equal, and returns `self`. Raises a
-        `XAxisException` otherwise.
-
-        :param other: The :class:`PDF` to add.
-        :type other: :class:`PDF`
-        :return: `self` after addition.
-        :rtype: :class:`PDF`
-        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
-        """
-        if self._x_axes_compatible(other):
-            self.g = self.g + other.g * (other.scaling_factor / self.scaling_factor)
-            return self
-        else:
-            raise XAxisException(self.r, other.r)
-
-    def __sub__(self, other: 'PDF') -> 'PDF':
-        """Returns a :class:`PDF` object with the same r values as the provided :class:`PDF` objects, g values are the
-        difference of the provided g values. `name` is '`self.name` - `other.name`'. Raises a `XAxisException` if r
-        values are not equal.
-
-        :param other: The :class:`PDF` object to subtract.
-        :type other: :class:`PDF`
-        :return: The difference of the PDFs (dPDF).
-        :rtype: :class:`PDF`
-        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
-        """
-        if self._x_axes_compatible(other):
-            return PDF(self.r, self.g * self.scaling_factor - other.g * other.scaling_factor,
-                       f"{self.name} - {other.name}")
-        else:
-            raise XAxisException(self.r, other.r)
-
-    def __isub__(self, other: 'PDF') -> 'PDF':
-        """Subtracts `other.g` from `self.g`, if `self.r` and `other.r` are equal, and returns `self`. Raises a
-        `XAxisException` otherwise.
-
-        :param other: The :class:`PDF` to subtract.
-        :type other: :class:`PDF`
-        :return: `self` after subtraction.
-        :rtype: :class:`PDF`
-        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
-        """
-        if self._x_axes_compatible(other):
-            self.g = self.g - other.g * (other.scaling_factor / self.scaling_factor)
-            return self
-        else:
-            raise XAxisException(self.r, other.r)
-
-    def __len__(self) -> int:
-        """Returns the size of `self.r`. Should be equal to `self.g` in any reasonable :class:`PDF` instance.
-
-        :return: The size of `self.r`.
-        :rtype: int
-        """
-        return self.r.size
-
-    def _get_rmin_index(self, r_min: float) -> int:
-        """Gets the index of the smallest value in `self.r` where r >= `r_min`.
-
-        :param r_min: The minimum r to look for.
-        :type r_min: float
-        :return: The index of `r_min`, if `r_min` is in `self.r`. Otherwise, the index of the smallest value in `self.r`
-        that is greater than `r_min`.
-        :rtype: int
-        """
-        arr: np.ndarray = np.where(self.r >= r_min)[0]  # Returns an array of indices where self.r >= r_min
-        if arr.size > 0:
-            index: int = np.amin(arr)
-        else:
-            index = 0
-        return index
-
-    def _get_rmax_index(self, r_max: float) -> int:
-        """Gets the index of the greatest value in `self.r` where r <= `r_max`.
-
-        :param r_max: The maximum r to look for.
-        :type r_max: float
-        :return: The index of `r_max`, if `r_max` is in `self.r`. Otherwise, the index of the greatest value in `self.r`
-        that is less than `r_min`.
-        :rtype: int
-        """
-        arr: np.ndarray = np.where(self.r <= r_max)[0]  # Returns an array of indices where self.r <= r_max
-        if arr.size > 0:
-            index: int = np.amax(arr)
-        else:
-            index = self.r.size
-        return index
-
-    def _insert_point(self, x: float, y: float):
-        """Inserts a point (x,y) into `self.r` and `self.g` respectively.
-
-        :param x: The value to insert into `self.r`.
-        :type x: float
-        :param y: The value to insert into `self.g`.
-        :type y: float
-        """
-        index: int = self._get_rmin_index(x)
-        if self.r.dtype == int and isinstance(x, float):
-            self.r = self.r.astype(float)
-        if self.g.dtype == int and isinstance(y, float):
-            self.g = self.g.astype(float)
-        self.r = np.insert(self.r, index, x)
-        self.g = np.insert(self.g, index, y)
-
     def add_point_linear(self, x: float):
         """Add a point to the `PDF` by taking the neighboring points on each side and extrapolating them linearly.
 
@@ -484,3 +326,161 @@ class PDF:
         pdf = PDF(r, g, name)
         pdf.scaling_factor = scaling_factor
         return pdf
+
+    def _x_axes_compatible(self, other: 'PDF') -> bool:
+        """Returns whether the x axes of the given `PDF` objects are compatible, meaning they have equal size and all
+        the values are close via `np.allclose`.
+
+        :param other: The :class:`PDF` object to compare to.
+        :type other: `PDF`
+        :return: True, if x axes of the PDFs have equal size and all the values are close. False otherwise.
+        :rtype: bool
+        """
+        return self.r.size == other.r.size and np.allclose(self.r, other.r, rtol=0)
+
+    def __eq__(self, other: 'PDF') -> bool:
+        """Returns whether r and g of the given PDFs are equal.
+
+        :param other: The :class:`PDF` to compare to.
+        :type other: `PDF`
+        :return: True, if r and g arrays are equal, False otherwise.
+        :rtype: bool
+        """
+        return self.r.size == other.r.size and self.g.size == other.g.size and np.allclose(self.r, other.r,
+                                                                                           rtol=0) and np.allclose(
+            self.g * self.scaling_factor, other.g * other.scaling_factor, rtol=0)
+
+    def __ne__(self, other: 'PDF') -> bool:
+        """Returns whether r and g of the given PDFs are unequal.
+
+        :param other: The :class:`PDF` to compare to.
+        :type other: `PDF`
+        :return: True, if r and g arrays are equal, False otherwise.
+        :rtype: bool
+        """
+        return not self == other
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __add__(self, other: 'PDF') -> 'PDF':
+        """Returns a :class:`PDF` object with the same r values as the provided :class:`PDF` objects, g values are the
+        sum of the provided g values. `name` is '`self.name` + `other.name`'. Raises a `XAxisException` if r values are
+        not equal.
+
+        :param other: The :class:`PDF` object to add.
+        :type other: :class:`PDF`
+        :return: The sum of the PDFs.
+        :rtype: :class:`PDF`
+        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
+        """
+        if self._x_axes_compatible(other):
+            return PDF(self.r, self.g * self.scaling_factor + other.g * other.scaling_factor,
+                       f"{self.name} + {other.name}")
+        else:
+            raise XAxisException(self.r, other.r)
+
+    def __iadd__(self, other: 'PDF') -> 'PDF':
+        """Adds `other.g` to `self.g`, if `self.r` and `other.r` are equal, and returns `self`. Raises a
+        `XAxisException` otherwise.
+
+        :param other: The :class:`PDF` to add.
+        :type other: :class:`PDF`
+        :return: `self` after addition.
+        :rtype: :class:`PDF`
+        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
+        """
+        if self._x_axes_compatible(other):
+            self.g = self.g + other.g * (other.scaling_factor / self.scaling_factor)
+            return self
+        else:
+            raise XAxisException(self.r, other.r)
+
+    def __sub__(self, other: 'PDF') -> 'PDF':
+        """Returns a :class:`PDF` object with the same r values as the provided :class:`PDF` objects, g values are the
+        difference of the provided g values. `name` is '`self.name` - `other.name`'. Raises a `XAxisException` if r
+        values are not equal.
+
+        :param other: The :class:`PDF` object to subtract.
+        :type other: :class:`PDF`
+        :return: The difference of the PDFs (dPDF).
+        :rtype: :class:`PDF`
+        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
+        """
+        if self._x_axes_compatible(other):
+            return PDF(self.r, self.g * self.scaling_factor - other.g * other.scaling_factor,
+                       f"{self.name} - {other.name}")
+        else:
+            raise XAxisException(self.r, other.r)
+
+    def __isub__(self, other: 'PDF') -> 'PDF':
+        """Subtracts `other.g` from `self.g`, if `self.r` and `other.r` are equal, and returns `self`. Raises a
+        `XAxisException` otherwise.
+
+        :param other: The :class:`PDF` to subtract.
+        :type other: :class:`PDF`
+        :return: `self` after subtraction.
+        :rtype: :class:`PDF`
+        :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
+        """
+        if self._x_axes_compatible(other):
+            self.g = self.g - other.g * (other.scaling_factor / self.scaling_factor)
+            return self
+        else:
+            raise XAxisException(self.r, other.r)
+
+    def __len__(self) -> int:
+        """Returns the size of `self.r`. Should be equal to `self.g` in any reasonable :class:`PDF` instance.
+
+        :return: The size of `self.r`.
+        :rtype: int
+        """
+        return self.r.size
+
+    def _get_rmin_index(self, r_min: float) -> int:
+        """Gets the index of the smallest value in `self.r` where r >= `r_min`.
+
+        :param r_min: The minimum r to look for.
+        :type r_min: float
+        :return: The index of `r_min`, if `r_min` is in `self.r`. Otherwise, the index of the smallest value in `self.r`
+        that is greater than `r_min`.
+        :rtype: int
+        """
+        arr: np.ndarray = np.where(self.r >= r_min)[0]  # Returns an array of indices where self.r >= r_min
+        if arr.size > 0:
+            index: int = np.amin(arr)
+        else:
+            index = 0
+        return index
+
+    def _get_rmax_index(self, r_max: float) -> int:
+        """Gets the index of the greatest value in `self.r` where r <= `r_max`.
+
+        :param r_max: The maximum r to look for.
+        :type r_max: float
+        :return: The index of `r_max`, if `r_max` is in `self.r`. Otherwise, the index of the greatest value in `self.r`
+        that is less than `r_min`.
+        :rtype: int
+        """
+        arr: np.ndarray = np.where(self.r <= r_max)[0]  # Returns an array of indices where self.r <= r_max
+        if arr.size > 0:
+            index: int = np.amax(arr)
+        else:
+            index = self.r.size
+        return index
+
+    def _insert_point(self, x: float, y: float):
+        """Inserts a point (x,y) into `self.r` and `self.g` respectively.
+
+        :param x: The value to insert into `self.r`.
+        :type x: float
+        :param y: The value to insert into `self.g`.
+        :type y: float
+        """
+        index: int = self._get_rmin_index(x)
+        if self.r.dtype == int and isinstance(x, float):
+            self.r = self.r.astype(float)
+        if self.g.dtype == int and isinstance(y, float):
+            self.g = self.g.astype(float)
+        self.r = np.insert(self.r, index, x)
+        self.g = np.insert(self.g, index, y)
