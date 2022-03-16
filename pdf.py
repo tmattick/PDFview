@@ -4,6 +4,7 @@ import os
 import re
 from typing import Optional, List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import minimize_scalar
@@ -14,6 +15,17 @@ class XAxisException(Exception):
         self.x1 = x1
         self.x2 = x2
         self.message = message
+        super().__init__(self.message)
+
+
+class UnderdeterminedException(Exception):
+    def __init__(self, num_provided: int, num_needed: int, message: Optional[str] = None):
+        self.num_provided = num_provided
+        self.num_needed = num_needed
+        if message is None:
+            self.message = f"The system of equations you are trying to solve is underdetemined. You gave {num_provided} points but needed {num_needed}."
+        else:
+            self.message = message
         super().__init__(self.message)
 
 
@@ -222,7 +234,7 @@ class PDF:
         :type degree: int
         """
 
-        def _solve_for_polynomial(a_values: List[float], b_values: List[float], deg: int):
+        def _solve_for_polynomial(a_values: List[float], b_values: List[float], deg: int) -> float:
             x_matrix = np.stack([a_values for _ in range(deg + 1)])
             for i, row in enumerate(x_matrix):
                 x_matrix[i] = np.power(row, deg - i)
@@ -239,13 +251,27 @@ class PDF:
             rmax_index: int = self._get_rmax_index(x)
             rmin_index: int = self._get_rmin_index(x)
             num_points: int = degree + 1  # n+1
-            x_values: List[float] = [self.r[index] for index in
-                                     range(rmax_index - math.floor(num_points / 2 - 0.5),
-                                           rmin_index + math.floor(num_points / 2))]
-            y_values: List[float] = [self.g[index] for index in
-                                     range(rmax_index - math.floor(num_points / 2 - 0.5),
-                                           rmin_index + math.floor(num_points / 2))]
-            y = _solve_for_polynomial(x_values, y_values, degree)
+            range_min: int = max(0, rmax_index - math.floor(num_points / 2 - 0.5))  # smallest index is in bounds of r
+            range_max: int = min(self.r.size - 1, rmin_index + num_points // 2)  # greatest index is in bounds of r
+
+            x_values: List[float] = [self.r[index] for index in range(range_min, range_max)]
+            y_values: List[float] = [self.g[index] for index in range(range_min, range_max)]
+
+            """If you can't take points equally from both sides, take from one side (where there still are new points)
+            until there are enough points. If there aren't enough, raise an `UnderdeterminedException`."""
+            while len(x_values) < num_points:
+                if range_min > 0:
+                    range_min -= 1
+                    x_values.insert(0, self.r[range_min])
+                    y_values.insert(0, self.g[range_min])
+                elif range_max < self.r.size - 1:
+                    range_max += 1
+                    x_values.append(self.r[range_max])
+                    y_values.append(self.g[range_max])
+                else:
+                    raise UnderdeterminedException(len(x_values), num_points)
+
+            y: float = _solve_for_polynomial(x_values, y_values, degree)
             self._insert_point(x, y)
         elif degree == 1:
             self.add_point_linear(x)
@@ -314,6 +340,8 @@ class PDF:
                                   method="Brent")
             if res.success:
                 self.scaling_factor = res.x
+            else:
+                print(res.message)
         else:
             raise XAxisException(self.r, other.r)
 
@@ -331,6 +359,27 @@ class PDF:
                     f.write(f"{x} {y}\n")
         else:
             raise FileExistsError("The file your about to write to already exists.")
+
+    def plot(self, save_file: bool = False, **kwargs):
+        if "color" in kwargs:
+            color = kwargs["color"]
+        else:
+            color = None
+
+        plt.plot(self.r, self.g, color=color, )
+
+        if save_file:
+            # save the plot to a specified path or to `self.name`.png
+            if "path" in kwargs:
+                path: str = kwargs["path"]
+            else:
+                path = f"{self.name}.png"
+
+            plt.savefig(path)
+        else:
+            plt.show()
+
+        raise NotImplementedError
 
     @property
     def json(self) -> str:
