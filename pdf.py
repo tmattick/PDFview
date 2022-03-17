@@ -262,11 +262,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the provided PDFs are not equal.
         """
-        if pdf1._x_axes_compatible(pdf2):
-            g: np.ndarray = pdf1.g * pdf1.scaling_factor - pdf2.g * pdf2.scaling_factor
-            return PDF(pdf1.r, g, f"{pdf1} - {pdf2}")
-        else:
-            raise XAxisException(pdf1.r, pdf2.r)
+        return pdf1 - pdf2
 
     @staticmethod
     def read_gr_file(path: str) -> 'PDF':
