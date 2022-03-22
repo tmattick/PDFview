@@ -135,7 +135,7 @@ class PDF:
         self.scaling_factor = factor
 
     def get_distance(self, other: 'PDF') -> float:
-        """Calculates the distance between the :class:`PDF` and another via squared distance. Raises a
+        """Calculates the distance between the :class:`PDF` and another via Euclidean distance. Raises a
         class:`XAxisException` if the r ranges of the PDFs are not equal.
 
         :param other: The PDF to calculate the distance to.
@@ -147,7 +147,7 @@ class PDF:
         if self.x_axes_compatible(other):
             dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
             dist_array = np.square(dist_array)
-            dist: float = np.sum(dist_array)
+            dist: float = math.sqrt(np.sum(dist_array))
             return dist
         else:
             raise XAxisException(self.r, other.r)
