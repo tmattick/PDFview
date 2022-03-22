@@ -181,6 +181,7 @@ class PDF:
         start_i_other: int = other._get_rmin_index(start)
         end_i_self: int = self._get_rmax_index(end)
         end_i_other: int = other._get_rmax_index(end)
+
         if self.r[start_i_self:end_i_self].size == other.r[start_i_other:end_i_other].size and np.allclose(
                 self.r[start_i_self:end_i_self], other.r[start_i_other:end_i_other], rtol=0):
             res = minimize_scalar(_distance_with_factor, args=(
@@ -260,11 +261,11 @@ class PDF:
         :param json_str: A JSON string containing all object parameters.
         :type json_str: str
         """
-        json_dict: dict = json.loads(json_str)
-        self.r = np.array(json_dict["r"])
-        self.g = np.array(json_dict["g"])
-        self.name = json_dict["name"]
-        self.scaling_factor = json_dict["scaling_factor"]
+        object_dict: dict = json.loads(json_str)
+        self.r = np.array(object_dict["r"])
+        self.g = np.array(object_dict["g"])
+        self.name = object_dict["name"]
+        self.scaling_factor = object_dict["scaling_factor"]
 
     @staticmethod
     def differential_pdf(pdf1: 'PDF', pdf2: 'PDF') -> 'PDF':
