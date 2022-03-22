@@ -212,27 +212,6 @@ class PDF:
         else:
             raise FileExistsError("The file your about to write to already exists.")
 
-    def plot(self, save_file: bool = False, **kwargs):
-        if "color" in kwargs:
-            color = kwargs["color"]
-        else:
-            color = None
-
-        plt.plot(self.r, self.g, color=color, )
-
-        if save_file:
-            # save the plot to a specified path or to `self.name`.png
-            if "path" in kwargs:
-                path: str = kwargs["path"]
-            else:
-                path = f"{self.name}.png"
-
-            plt.savefig(path)
-        else:
-            plt.show()
-
-        raise NotImplementedError
-
     def x_axes_compatible(self, other: 'PDF') -> bool:
         """Returns whether the x axes of the given `PDF` objects are compatible, meaning they have equal size and all
         the values are close via `np.allclose`.
