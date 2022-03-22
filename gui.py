@@ -38,7 +38,7 @@ class Window(ABC):
         :return: Some instances return a :class:`PDF` object when the event loop is finished.
         :rtype: :class:`PDF`, optional
         """
-        pass
+        raise NotImplementedError()
 
 
 class MainWindow(Window):
