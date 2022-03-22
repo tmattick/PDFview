@@ -202,10 +202,13 @@ class PDF:
         :type path: str
         :raises `FileExistsError`: If the file already exists.
         """
+        gr_entry: str = ""
+        for x, y in zip(self.r, self.g * self.scaling_factor):
+            gr_entry += f"{x} {y}\n"
+
         if not os.path.exists(path):
-            with open(path, "a") as f:
-                for x, y in zip(self.r, self.g * self.scaling_factor):
-                    f.write(f"{x} {y}\n")
+            with open(path, "w") as f:
+                f.write(gr_entry)
         else:
             raise FileExistsError("The file your about to write to already exists.")
 
