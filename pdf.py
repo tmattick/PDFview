@@ -56,15 +56,18 @@ class PDF:
         :param x: The x value of the point that will be added.
         :type x: float
         """
-        rmax_index: int = self._get_rmax_index(x)
-        rmin_index: int = self._get_rmin_index(x)
-        x1: float = self.r[rmax_index]
-        x2: float = self.r[rmin_index]
-        y1: float = self.g[rmax_index]
-        y2: float = self.g[rmin_index]
-        m: float = (y2 - y1) / (x2 - x1)
-        y: float = m * x + (y1 - x1 * m)
-        self._insert_point(x, y)
+        if not x in self.r:
+            rmax_index: int = self._get_rmax_index(x)
+            rmin_index: int = self._get_rmin_index(x)
+            x1: float = self.r[rmax_index]
+            x2: float = self.r[rmin_index]
+            y1: float = self.g[rmax_index]
+            y2: float = self.g[rmin_index]
+            m: float = (y2 - y1) / (x2 - x1)
+            y: float = m * x + (y1 - x1 * m)
+            self._insert_point(x, y)
+        else:
+            raise ValueError(f"The value {x} is already present in this PDF.")
 
     def add_point_polynomial(self, x: float, degree: int):
         """Add a point to the `PDF` object by taking the (degree + 1) neighboring points and extrapolating them to a
@@ -76,49 +79,52 @@ class PDF:
         :type degree: int
         """
 
-        def _solve_for_polynomial(a_values: List[float], b_values: List[float], deg: int) -> float:
+        def _solve_for_polynomial(a_values: List[float], b_values: List[float], x_val:float, deg: int) -> float:
             x_matrix = np.stack([a_values for _ in range(deg + 1)])
             for i, row in enumerate(x_matrix):
                 x_matrix[i] = np.power(row, deg - i)
             x_matrix = x_matrix.transpose()
             a = np.linalg.solve(x_matrix, b_values)
             x_powers = np.empty(deg + 1)
-            x_powers.fill(x)
+            x_powers.fill(x_val)
             x_powers = np.power(x_powers, np.arange(deg, -1, -1))
             f = np.multiply(a, x_powers)
             ans: float = np.sum(f)
             return ans
 
-        if degree >= 2 and isinstance(degree, int):
-            rmax_index: int = self._get_rmax_index(x)
-            rmin_index: int = self._get_rmin_index(x)
-            num_points: int = degree + 1  # n+1
-            range_min: int = max(0, rmax_index - math.floor(num_points / 2 - 0.5))  # smallest index is in bounds of r
-            range_max: int = min(self.r.size - 1, rmin_index + num_points // 2)  # greatest index is in bounds of r
+        if not x in self.r:
+            if degree >= 2 and isinstance(degree, int):
+                rmax_index: int = self._get_rmax_index(x)
+                rmin_index: int = self._get_rmin_index(x)
+                num_points: int = degree + 1  # n+1
+                range_min: int = max(0, rmax_index - math.floor(num_points / 2 - 0.5))  # smallest index is in bounds of r
+                range_max: int = min(self.r.size - 1, rmin_index + num_points // 2)  # greatest index is in bounds of r
 
-            x_values: List[float] = [self.r[index] for index in range(range_min, range_max)]
-            y_values: List[float] = [self.g[index] for index in range(range_min, range_max)]
+                x_values: List[float] = [self.r[index] for index in range(range_min, range_max)]
+                y_values: List[float] = [self.g[index] for index in range(range_min, range_max)]
 
-            """If you can't take points equally from both sides, take from one side (where there still are new points)
-            until there are enough points. If there aren't enough, raise an `UnderdeterminedException`."""
-            while len(x_values) < num_points:
-                if range_min > 0:
-                    range_min -= 1
-                    x_values.insert(0, self.r[range_min])
-                    y_values.insert(0, self.g[range_min])
-                elif range_max < self.r.size - 1:
-                    range_max += 1
-                    x_values.append(self.r[range_max])
-                    y_values.append(self.g[range_max])
-                else:
-                    raise UnderdeterminedException(len(x_values), num_points)
+                """If you can't take points equally from both sides, take from one side (where there still are new
+                points) until there are enough points. If there aren't enough, raise an `UnderdeterminedException`."""
+                while len(x_values) < num_points:
+                    if range_min > 0:
+                        range_min -= 1
+                        x_values.insert(0, self.r[range_min])
+                        y_values.insert(0, self.g[range_min])
+                    elif range_max < self.r.size - 1:
+                        range_max += 1
+                        x_values.append(self.r[range_max])
+                        y_values.append(self.g[range_max])
+                    else:
+                        raise UnderdeterminedException(len(x_values), num_points)
 
-            y: float = _solve_for_polynomial(x_values, y_values, degree)
-            self._insert_point(x, y)
-        elif degree == 1:
-            self.add_point_linear(x)
+                y: float = _solve_for_polynomial(x_values, y_values, x, degree)
+                self._insert_point(x, y)
+            elif degree == 1:
+                self.add_point_linear(x)
+            else:
+                raise ValueError("degree should be a positive integer.")
         else:
-            raise ValueError("degree should be a positive integer.")
+            raise ValueError(f"The value {x} is already present in this PDF.")
 
     def scale(self, factor: float):
         """Scales the :class:`PDF` by multiplying `self.g` with the `factor` given.
@@ -138,7 +144,7 @@ class PDF:
         :rtype: float
         :raises `XAxisException`: If the r ranges of the  PDFs are not equal.
         """
-        if self._x_axes_compatible(other):
+        if self.x_axes_compatible(other):
             dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
             dist_array = np.square(dist_array)
             dist: float = np.sum(dist_array)
@@ -222,6 +228,17 @@ class PDF:
             plt.show()
 
         raise NotImplementedError
+
+    def x_axes_compatible(self, other: 'PDF') -> bool:
+        """Returns whether the x axes of the given `PDF` objects are compatible, meaning they have equal size and all
+        the values are close via `np.allclose`.
+
+        :param other: The :class:`PDF` object to compare to.
+        :type other: `PDF`
+        :return: True, if x axes of the PDFs have equal size and all the values are close. False otherwise.
+        :rtype: bool
+        """
+        return self.r.size == other.r.size and np.allclose(self.r, other.r, rtol=0)
 
     @property
     def json(self) -> str:
@@ -323,17 +340,6 @@ class PDF:
         pdf.scaling_factor = scaling_factor
         return pdf
 
-    def _x_axes_compatible(self, other: 'PDF') -> bool:
-        """Returns whether the x axes of the given `PDF` objects are compatible, meaning they have equal size and all
-        the values are close via `np.allclose`.
-
-        :param other: The :class:`PDF` object to compare to.
-        :type other: `PDF`
-        :return: True, if x axes of the PDFs have equal size and all the values are close. False otherwise.
-        :rtype: bool
-        """
-        return self.r.size == other.r.size and np.allclose(self.r, other.r, rtol=0)
-
     def __eq__(self, other: 'PDF') -> bool:
         """Returns whether r and g of the given PDFs are equal.
 
@@ -370,7 +376,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if self._x_axes_compatible(other):
+        if self.x_axes_compatible(other):
             return PDF(self.r, self.g * self.scaling_factor + other.g * other.scaling_factor,
                        f"{self.name} + {other.name}")
         else:
@@ -386,7 +392,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if self._x_axes_compatible(other):
+        if self.x_axes_compatible(other):
             self.g = self.g + other.g * (other.scaling_factor / self.scaling_factor)
             return self
         else:
@@ -403,7 +409,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if self._x_axes_compatible(other):
+        if self.x_axes_compatible(other):
             return PDF(self.r, self.g * self.scaling_factor - other.g * other.scaling_factor,
                        f"{self.name} - {other.name}")
         else:
@@ -419,7 +425,7 @@ class PDF:
         :rtype: :class:`PDF`
         :raises `XAxisException`: If the r ranges of the :class:`PDF` objects are not equal.
         """
-        if self._x_axes_compatible(other):
+        if self.x_axes_compatible(other):
             self.g = self.g - other.g * (other.scaling_factor / self.scaling_factor)
             return self
         else:
