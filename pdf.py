@@ -274,13 +274,16 @@ class PDF:
         return pdf1 - pdf2
 
     @staticmethod
-    def read_gr_file(path: str) -> 'PDF':
+    def read_gr_file(path: str, name: Optional[str] = None) -> 'PDF':
         """Creates a :class:`PDF` object from a .gr-file that is formatted with r values in the first column and g(r) in
         the second column with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
-        Uses the base filename without extension for `PDF.name`.
+        Gives the PDF the name `name` if `name` is given, uses the base filename without extension for `PDF.name`
+        otherwise.
 
         :param path: The path to the .gr-file to read from.
         :type path: str
+        :param name: The name of the PDF.
+        :type name: str, optional.
         :return: The PDF that is read from the file with name of the file without extension.
         :rtype: :class:`PDF`
         """
@@ -308,7 +311,8 @@ class PDF:
                 r.append(float(x))
                 g.append(float(y))
 
-        name: str = os.path.basename(path).split(".")[0]  # filename without extension
+        if name is None:
+            name: str = os.path.basename(path).split(".")[0]  # filename without extension
 
         return PDF(r, g, name)
 
