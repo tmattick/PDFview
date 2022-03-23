@@ -13,6 +13,8 @@ from pdf import PDF, XAxisException
 sg.theme("SystemDefault")
 matplotlib.use("TkAgg")
 
+VERSION: str = "0.1"
+
 
 class Window(ABC):
     """An abstract class representing a PySimpleGUI window with a :method:`run` method containing the event loop.
@@ -79,7 +81,7 @@ class MainWindow(Window):
                       [[sg.Text(f"Name: ", key="-NAME_TEXT-")],
                        [sg.Text(f"Scaling Factor: ", key="-FACTOR_TEXT-")]])]]
         super().__init__(layout=[[sg.Column(self.left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
-                                  sg.Column(self.right_layout, expand_x=True, expand_y=True)]], title="PDFview",
+                                  sg.Column(self.right_layout, expand_x=True, expand_y=True)]], title=f"PDFview {VERSION}",
                          finalize=True, resizable=True)
 
         self._draw_figure()
