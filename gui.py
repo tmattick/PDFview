@@ -53,7 +53,7 @@ class MainWindow(Window):
         self.event = self.values = None
         self._setup_fig_sub()
 
-        self.left_layout = [
+        left_layout = [
             [sg.Text("File:"), sg.In(size=(25, 1), enable_events=True, key="-FILE_IN-", expand_x=True),
              sg.FileBrowse()],
             [sg.Listbox(values=self.pdfs, enable_events=True, size=(40, 20), key="-PDF_LIST-", expand_x=True,
@@ -74,15 +74,16 @@ class MainWindow(Window):
             [sg.Frame("Combine PDFs",
                       [[sg.Button("dPDF", key="-DIFF_BUTTON-"), sg.Button("Scale to...", key="-FIT_BUTTON-")]])]
         ]
-        self.right_layout = [
+        right_layout = [
             [sg.Canvas(size=(60, 60), key="-CANVAS-", expand_x=True, expand_y=True)],
             [sg.Text("Scaling Factor:"), sg.In(size=(3, 1), key="-SCALE_IN-"), sg.Button("OK", key="-SCALE_BUTTON-")],
             [sg.Frame("Current PDF",
                       [[sg.Text(f"Name: ", key="-NAME_TEXT-")],
                        [sg.Text(f"Scaling Factor: ", key="-FACTOR_TEXT-")]])]]
-        super().__init__(layout=[[sg.Column(self.left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
-                                  sg.Column(self.right_layout, expand_x=True, expand_y=True)]], title=f"PDFview {VERSION}",
-                         finalize=True, resizable=True)
+        layout = [[sg.Column(left_layout, expand_x=True, expand_y=True), sg.VSeperator(),
+                   sg.Column(right_layout, expand_x=True, expand_y=True)]]
+
+        super().__init__(layout=layout, title=f"PDFview {VERSION}", finalize=True, resizable=True)
 
         self._draw_figure()
 
