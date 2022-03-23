@@ -4,7 +4,6 @@ import os
 import re
 from typing import Optional, List
 
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import minimize_scalar
@@ -34,10 +33,11 @@ class PDF:
     
     :param r: The range of distances in the PDF, commonly given in Angstrom.
     :type r: :class:`npt.ArrayLike`
-    :param g: The values of g(r).
+    :param g: The values of the PDF G(r).
     :type g: :class:`npt.ArrayLike`
     :param name: The name of the PDF, defaults to "exPDF".
     :type name: str, optional
+    :raises `ValueError`: If `r` and `g` are of differing lengths.
     """
 
     def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF"):
@@ -52,9 +52,11 @@ class PDF:
 
     def add_point_linear(self, x: float):
         """Add a point to the `PDF` by taking the neighboring points on each side and extrapolating them linearly.
+        Raises a `ValueError` if the point `x` is already in `self.r`.
 
         :param x: The x value of the point that will be added.
         :type x: float
+        :raises `ValueError`: If `x` is already in `self.r`.
         """
         if not x in self.r:
             rmax_index: int = self._get_rmax_index(x)
@@ -70,16 +72,21 @@ class PDF:
             raise ValueError(f"The value {x} is already present in this PDF.")
 
     def add_point_polynomial(self, x: float, degree: int):
-        """Add a point to the `PDF` object by taking the (degree + 1) neighboring points and extrapolating them to a
-        polynomial function. Calculate the value y of the function at x and insert x into `self.r`, y into `self.g`.
+        """Add a point to the `PDF` object by taking the (`degree` + 1) neighboring points and extrapolating them to a
+        polynomial function. Calculate the value `y` of the function at `x` and insert `x` into `self.r`, `y` into
+        `self.g`. Raises a `ValueError` if the point `x` is already in `self.r`.
 
         :param x: The x value of the point that will be added.
         :type x: float
         :param degree: The degree of the polynomial function that will be used for extrapolating.
         :type degree: int
+        :raises `ValueError`: If `x` is already in `self.r`.
+        :raises `ValueError`: If `degree` isn't a positive integer.
+        :raises `UnderdeterminedException`: If there aren't enough points to solve for a polynomial of degree `degree`.
+        There need to be at least (`degree` + 1) points.
         """
 
-        def _solve_for_polynomial(a_values: List[float], b_values: List[float], x_val:float, deg: int) -> float:
+        def _solve_for_polynomial(a_values: List[float], b_values: List[float], x_val: float, deg: int) -> float:
             x_matrix = np.stack([a_values for _ in range(deg + 1)])
             for i, row in enumerate(x_matrix):
                 x_matrix[i] = np.power(row, deg - i)
@@ -97,7 +104,8 @@ class PDF:
                 rmax_index: int = self._get_rmax_index(x)
                 rmin_index: int = self._get_rmin_index(x)
                 num_points: int = degree + 1  # n+1
-                range_min: int = max(0, rmax_index - math.floor(num_points / 2 - 0.5))  # smallest index is in bounds of r
+                range_min: int = max(0,
+                                     rmax_index - math.floor(num_points / 2 - 0.5))  # smallest index is in bounds of r
                 range_max: int = min(self.r.size - 1, rmin_index + num_points // 2)  # greatest index is in bounds of r
 
                 x_values: List[float] = [self.r[index] for index in range(range_min, range_max)]
@@ -160,17 +168,17 @@ class PDF:
         :param other: The PDF to approximate.
         :type other: :class:`PDF`
         :param start: r value where to start the fit.
-        :type start: Optional[float]
+        :type start: float, optional
         :param end: r value where to end the fit.
-        :type end: Optional[float]
+        :type end: float, optional
         :raises `XAxisException`: If the r ranges of the PDFs are not equal between start and end.
         """
 
         def _distance_with_factor(factor: float, x: np.ndarray, y: np.ndarray) -> float:
             dist_array = factor * x - y
             dist_array = np.square(dist_array)
-            dist: float = np.sum(dist_array)
-            return dist
+            dist_sq: float = np.sum(dist_array)
+            return dist_sq
 
         if start is None:
             start = np.amax([np.amin(self.r), np.amin(other.r)])
@@ -195,7 +203,8 @@ class PDF:
             raise XAxisException(self.r, other.r)
 
     def save_gr_file(self, path: str):
-        """Saves the :class:`PDF` object to a .gr-file after checking if the file already exists. Raises a
+        """Saves the :class:`PDF` object to a .gr-file after checking if the file already exists. Takes
+        `self.scaling_factor` into account by saving (`self.g` * `self.scaling_factor`). Raises a
         :class:`FileExistsError` if the file already exists.
         
         :param path: The path to save the .gr-file to. Has to contain the file-extension.
@@ -252,7 +261,7 @@ class PDF:
     @staticmethod
     def differential_pdf(pdf1: 'PDF', pdf2: 'PDF') -> 'PDF':
         """Returns the differential :class`PDF` of two :class:`PDF` objects with the same r-range. Raises a
-        class:`XAxisException`, if the r ranges of the PDFs are not equal.
+        class:`XAxisException`, if the r ranges of the PDFs are not equal. Alternative way to access `pdf1` - `pdf2`.
 
         :param pdf1: The minuend PDF.
         :type pdf1: :class:`PDF`
