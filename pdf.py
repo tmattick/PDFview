@@ -146,8 +146,8 @@ class PDF:
         """
         if self.x_axes_compatible(other):
             dist_array = self.g * self.scaling_factor - other.g * other.scaling_factor
-            dist_array = np.square(dist_array)
-            dist: float = math.sqrt(np.sum(dist_array))
+            dist_array = np.abs(dist_array)
+            dist: float = np.sum(dist_array)
             return dist
         else:
             raise XAxisException(self.r, other.r)
