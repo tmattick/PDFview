@@ -13,7 +13,7 @@ from pdf import PDF, XAxisException
 sg.theme("SystemDefault")
 matplotlib.use("TkAgg")
 
-VERSION: str = "0.1"
+VERSION: str = "0.2"
 
 
 class Window(ABC):
@@ -51,6 +51,8 @@ class MainWindow(Window):
         self.pdfs: List[PDF] = []
         self.selected_pdf: Optional[PDF] = None
         self.event = self.values = None
+        self.mouse_x: float = 0
+        self.mouse_y: float = 0
         self._setup_fig_sub()
 
         left_layout = [
@@ -76,6 +78,7 @@ class MainWindow(Window):
         ]
         right_layout = [
             [sg.Canvas(size=(60, 60), key="-CANVAS-", expand_x=True, expand_y=True)],
+            [sg.Text("x: , y: ", key="-MOUSE_POS_TEXT-")],
             [sg.Text("Scaling Factor:"), sg.In(size=(3, 1), key="-SCALE_IN-"), sg.Button("OK", key="-SCALE_BUTTON-")],
             [sg.Frame("Current PDF",
                       [[sg.Text(f"Name: ", key="-NAME_TEXT-")],
@@ -186,11 +189,18 @@ class MainWindow(Window):
         fit_window.run()
         self._draw_new_plot()
 
+    # mouse movement
+    def mouse_move(self, event):
+        if not (event.xdata is None and event.ydata is None):
+            self.mouse_x, self.mouse_y = event.xdata, event.ydata
+        self.window["-MOUSE_POS_TEXT-"].update(f"x: {self.mouse_x:.3f}, y: {self.mouse_y:.3f}")
+
     # utilities for drawing
     def _setup_fig_sub(self):
         """Sets up `self.fig` and `self.sub` for the right-hand canvas.
         """
         self.fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.mouse_move)
         self.sub = self.fig.add_subplot(111)
         self.sub.set_xlabel("r")
         self.sub.set_ylabel("G(r)")
