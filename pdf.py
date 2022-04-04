@@ -42,9 +42,20 @@ class PDF:
     """
 
     def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF"):
+        if not isinstance(r, np.ndarray):
+            r = np.array(r)
+        if not isinstance(g, np.ndarray):
+            g = np.array(g)
+
+        if not np.all(r[:-1] <= r[1:]):
+            # sort both r and g based on r if r is not sorted
+            sort_indices = np.argsort(r)
+            r = r[sort_indices]
+            g = g[sort_indices]
+
         if len(r) == len(g):
-            self.r = np.array(r)
-            self.g = np.array(g)
+            self.r = r
+            self.g = g
         else:
             raise ValueError(
                 f"r and g arrays have to be of equal length. Length of r: {len(r)}, length of g: {len(g)}.")
@@ -59,7 +70,7 @@ class PDF:
         :type x: float
         :raises `ValueError`: If `x` is already in `self.r`.
         """
-        if not x in self.r:
+        if x not in self.r:
             rmax_index: int = self._get_rmax_index(x)
             rmin_index: int = self._get_rmin_index(x)
             x1: float = self.r[rmax_index]
@@ -100,7 +111,7 @@ class PDF:
             ans: float = np.sum(f)
             return ans
 
-        if not x in self.r:
+        if x not in self.r:
             if degree >= 2 and isinstance(degree, int):
                 rmax_index: int = self._get_rmax_index(x)
                 rmin_index: int = self._get_rmin_index(x)
