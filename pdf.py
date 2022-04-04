@@ -2,11 +2,12 @@ import json
 import math
 import os
 import re
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import minimize_scalar
+from scipy.signal import argrelextrema
 
 
 class XAxisException(Exception):
@@ -201,6 +202,28 @@ class PDF:
                 print(res.message)
         else:
             raise XAxisException(self.r, other.r)
+
+    def find_maxima(self) -> List[Tuple[float, float]]:
+        """Finds the local maxima of the `PDF` object via `scipy.signal.argrelextrema`. Returns a list of all maxima
+        as (r, g) pairs.
+
+        :return: List of local maxima as (r, g) pairs.
+        :rtype: List[Tuple[float, float]]
+        """
+        indices: Tuple[int] = argrelextrema(self.g, np.greater)[0]
+        max_r_g = [(self.r[i], self.g[i]) for i in indices]
+        return max_r_g
+
+    def find_minima(self) -> List[Tuple[float, float]]:
+        """Finds the local minima of the `PDF` object via `scipy.signal.argrelextrema`. Returns a list of all minima
+        as (r, g) pairs.
+
+        :return: List of local minima as (r, g) pairs.
+        :rtype: List[Tuple[float, float]]
+        """
+        indices: Tuple[int] = argrelextrema(self.g, np.less)[0]
+        min_r_g = [(self.r[i], self.g[i]) for i in indices]
+        return min_r_g
 
     def save_gr_file(self, path: str):
         """Saves the :class:`PDF` object to a .gr-file after checking if the file already exists. Takes

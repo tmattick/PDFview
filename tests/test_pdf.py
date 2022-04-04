@@ -376,3 +376,19 @@ def test_save_gr_file():
     import_pdf = PDF.read_gr_file(os.path.join("tests", "saved_PDF.gr"))
     assert test_pdf1 == import_pdf
     os.remove(os.path.join("tests", "saved_PDF.gr"))
+
+
+def test_find_maxima():
+    """Test finding the maxima of a PDF.
+    """
+    test_pdf = PDF([1, 2, 3, 4, 5, 6], [0, 1, -1, 5, 4, 7])
+    maxima = test_pdf.find_maxima()
+    assert maxima == [(2, 1), (4, 5)]
+
+
+def test_find_minima():
+    """Test finding the minima of a PDF.
+    """
+    test_pdf = PDF([1, 2, 3, 4, 5, 6], [0, 1, -1, 5, 4, 7])
+    minima = test_pdf.find_minima()
+    assert minima == [(3, -1), (5, 4)]

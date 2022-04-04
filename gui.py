@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import json
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import zlib
 
 import matplotlib
@@ -74,7 +74,9 @@ class MainWindow(Window):
                                                  file_types=((".pvp-Files", ".pvp"), ("ALL Files", ".*")),
                                                  default_extension=".pvp", key="-PROJECT_SAVE_BUTTON-")]])],
             [sg.Frame("Combine PDFs",
-                      [[sg.Button("dPDF", key="-DIFF_BUTTON-"), sg.Button("Scale to...", key="-FIT_BUTTON-")]])]
+                      [[sg.Button("dPDF", key="-DIFF_BUTTON-"), sg.Button("Scale to...", key="-FIT_BUTTON-"),
+                        sg.Button("Find maxima", key="-MAXIMA_BUTTON-"),
+                        sg.Button("Find minima", key="-MINIMA_BUTTON-")]])]
         ]
         right_layout = [
             [sg.Canvas(size=(60, 60), key="-CANVAS-", expand_x=True, expand_y=True)],
@@ -123,6 +125,20 @@ class MainWindow(Window):
                 else:
                     sg.popup_error("Select a PDF to scale.")
                 self._update_pdf_info()
+            elif self.event == "-MAXIMA_BUTTON-":
+                # find all local maxima and display them
+                if self.values["-PDF_LIST-"]:
+                    self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self._display_extrema(True)
+                else:
+                    sg.popup_error("Select a PDF.")
+            elif self.event == "-MINIMA_BUTTON-":
+                # find all local minima and display them
+                if self.values["-PDF_LIST-"]:
+                    self.selected_pdf: PDF = self.values["-PDF_LIST-"][0]
+                    self._display_extrema(False)
+                else:
+                    sg.popup_error("Select a PDF.")
             elif self.event == "-SAVE_PATH-":
                 # save the selected PDF
                 if self.values["-PDF_LIST-"]:
@@ -188,6 +204,17 @@ class MainWindow(Window):
         fit_window = FitWindow(self.pdfs, self.values["-PDF_LIST-"][0])
         fit_window.run()
         self._draw_new_plot()
+
+    def _display_extrema(self, maxima: bool):
+        """Finds all extrema of the specified type (maxima if maxima is True, else minima) and displays them in a
+        `ExtremaWindow`.
+
+        :param maxima: Whether maxima or minima should be found and displayed.
+        """
+        extrema: List[
+            Tuple[float, float]] = self.selected_pdf.find_maxima() if maxima else self.selected_pdf.find_minima()
+        extrema_window = ExtremaWindow(extrema, maxima)
+        extrema_window.run()
 
     # mouse movement
     def mouse_move(self, event):
@@ -356,7 +383,7 @@ class FitWindow(Window):
         super().__init__(layout, "Scale to...")
 
     def run(self):
-        """Event loop for :class:``FitWindow``. Performs the fitting after the user hits the OK button. Uses
+        """Event loop for :class:`FitWindow`. Performs the fitting after the user hits the OK button. Uses
         :method:`PDF.scale_to_pdf`.
         """
         run_window = True
@@ -388,3 +415,29 @@ class FitWindow(Window):
                 break
 
         self.window.close()
+
+
+class ExtremaWindow(Window):
+    """Window for displaying the extrema of a :class:`PDF` object.
+
+    :param extrema: The list of extrema to be displayed as (x, y) coordinates.
+    :type extrema: List[Tuple[float, float]]
+    :param maxima: Whether maxima or minima are to be displayed.
+    :type maxima: bool
+    """
+
+    def __init__(self, extrema: List[Tuple[float, float]], maxima: bool):
+        layout = [[sg.Table(extrema, headings=["r", "g"], auto_size_columns=True)]]
+        name = "Maxima" if maxima else "Minima"
+        super().__init__(layout, name)
+
+    def run(self):
+        """Event loop for :class:`ExtremaWindow`. Displays the extrema given in a `sg.Table`.
+        """
+        run_window = True
+
+        while run_window:
+            event, values = self.window.read()
+            if event == "Exit" or event == sg.WIN_CLOSED:
+                run_window = False
+                break
