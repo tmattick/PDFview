@@ -193,9 +193,9 @@ class PDF:
             return dist_sq
 
         if start is None:
-            start = np.amax([np.amin(self.r), np.amin(other.r)])
+            start = max(np.amin(self.r), np.amin(other.r))
         if end is None:
-            end = np.amin([np.amax(self.r), np.amax(other.r)])
+            end = min(np.amax(self.r), np.amax(other.r))
 
         start_i_self: int = self._get_rmin_index(start)
         start_i_other: int = other._get_rmin_index(start)
