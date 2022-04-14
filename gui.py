@@ -13,7 +13,7 @@ from pdf import PDF, XAxisException
 sg.theme("SystemDefault")
 matplotlib.use("TkAgg")
 
-VERSION: str = "0.2"
+VERSION: str = "0.3"
 
 
 class Window(ABC):
@@ -171,9 +171,15 @@ class MainWindow(Window):
         right-hand canvas.
         """
         path: str = self.window["-FILE_IN-"].get()
-        self.pdfs.append(PDF.read_gr_file(path))
-        self.window["-PDF_LIST-"].update(self.pdfs)
-        self._add_to_plot()
+        try:
+            pdfs: Tuple[PDF] | Tuple[PDF, PDF] = PDF.read_from_file(path)
+        except UnicodeDecodeError:
+            sg.popup_error("The file could not be read as a PDF.")
+            return
+        for pdf in pdfs:
+            self.pdfs.append(pdf)
+            self.window["-PDF_LIST-"].update(self.pdfs)
+            self._add_to_plot()
 
     def _calc_diff_pdf(self):
         """Method for calculating dPDFs. Opens a :class:`DiffWindow` object, that returns the dPDF from two selected

@@ -308,6 +308,37 @@ class PDF:
         return pdf1 - pdf2
 
     @staticmethod
+    def read_from_file(path: str, name: Optional[str] = None, file_ext: Optional[str] = None) -> Tuple['PDF'] | Tuple[
+        'PDF', 'PDF']:
+        """Creates a :class:`PDF` object from a given file. Can parse .gr-, .cgr- and .fgr-files and any other format
+        consisting of (r g) tuples in rows. Floats have to use a "." as decimal seperator. Parses the given file via
+        the method described by the file_ext, gets the file extension from the file otherwise. Gives the PDF the name
+        `name` if `name` is given, uses the base filename without extension for `PDF.name` otherwise.
+
+        :param path: The path to the file to read from.
+        :type path: str
+        :param name: The name of the PDF.
+        :type name: str, optional
+        :param file_ext: The file extension of the file to read from.
+        :type file_ext: str, optional
+        :return: A tuple consisting of a single read PDF for .gr- or .cgr-file, a tuple consisting of the experimental
+        PDF and the calculated PDF for .fgr-file.
+        :rtype: tuple[PDF]
+        """
+        if not file_ext:
+            file_ext = os.path.splitext(path)[1]
+
+        if file_ext == "gr" or file_ext == ".gr":
+            return PDF.read_gr_file(path, name),
+        elif file_ext == "cgr" or file_ext == ".cgr":
+            return PDF.read_cgr_file(path, name),
+        elif file_ext == "fgr" or file_ext == ".fgr":
+            return PDF.read_fgr_file(path, name)
+        else:
+            # Fallback option for different format. Can parse any (r g) format.
+            return PDF.read_gr_file(path, name),
+
+    @staticmethod
     def read_gr_file(path: str, name: Optional[str] = None) -> 'PDF':
         """Creates a :class:`PDF` object from a .gr-file that is formatted with r values in the first column and g(r) in
         the second column with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
@@ -349,6 +380,69 @@ class PDF:
             name: str = os.path.basename(path).split(".")[0]  # filename without extension
 
         return PDF(r, g, name)
+
+    @staticmethod
+    def read_cgr_file(path: str, name: Optional[str] = None) -> 'PDF':
+        """Creates a :class:`PDF` object from a .cgr-file that is formatted with r values in the first column and g(r)
+        in the second column with one or multiple spaces separating them. Floats have to use a "." as decimal separator.
+        Gives the PDF the name `name` if `name` is given, uses the base filename without extension for `PDF.name`
+        otherwise.
+
+        :param path: The path to the .cgr-file to read from.
+        :type path: str
+        :param name: The name of the PDF.
+        :type name: str, optional.
+        :return: The PDF that is read from the file with name of the file without extension.
+        :rtype: :class:`PDF`
+        """
+        return PDF.read_gr_file(path, name)
+
+    @staticmethod
+    def read_fgr_file(path, name: Optional[str] = None) -> Tuple['PDF', 'PDF']:
+        """Creates a two :class:`PDF` objects from a .fgr-file that is formatted with r values in the first column,
+        g_exp(r) in the second column and g_calc(r) in the fifth column with one or multiple spaces separating them.
+        Floats have to use a "." as decimal separator. Gives the PDF the name `name` if `name` is given, uses the base
+        filename without extension for `PDF.name` otherwise.
+
+        :param path: The path to the .fgr-file to read from.
+        :type path: str
+        :param name: The name of the PDF.
+        :type name: str, optional.
+        :return: The PDFs that are read from the file with name of the file without extension.
+        :rtype: tuple[PDF]
+        """
+
+        def _is_data_row(row: str) -> bool:
+            """Determines whether an input string is "float space(s) float space(s) float space(s) float space(s) float".
+
+            :param row: The string to evaluate.
+            :type row: str
+            :return: True if the input string is "float space(s) float space(s) float space(s) float space(s) float",
+            False otherwise.
+            :rtype: bool
+            """
+            regexp: re.Pattern = re.compile(
+                "[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)( +)[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)( +)[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)( +)[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)( +)[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)"
+            )
+            return bool(regexp.search(row))
+
+        with open(path, "r") as f:
+            lines = f.readlines()
+
+        r: List[float] = []
+        g1: List[float] = []
+        g2: List[float] = []
+        for line in lines:
+            if _is_data_row(line):
+                x, y1, _, _, y2 = line.split(" ")
+                r.append(float(x))
+                g1.append(float(y1))
+                g2.append(float(y2))
+
+        if name is None:
+            name: str = os.path.basename(path).split(".")[0]
+
+        return PDF(r, g1, name), PDF(r, g2, f"{name} (theo.)")
 
     @staticmethod
     def from_json(json_str: str) -> 'PDF':
