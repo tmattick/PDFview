@@ -147,9 +147,9 @@ class PDF:
             raise ValueError(f"The value {x} is already present in this PDF.")
 
     def scale(self, factor: float):
-        """Scales the :class:`PDF` by multiplying `self.g` with the `factor` given.
+        """Scales the :class:`PDF` by changing `self.scaling_factor` to the given factor.
         
-        :param factor: The factor with which `self.g` is getting multiplied.
+        :param factor: The scaling factor.
         :type factor: float
         """
         self.scaling_factor = factor
@@ -160,7 +160,7 @@ class PDF:
 
         :param other: The PDF to calculate the distance to.
         :type other: :class:`PDF`
-        :return: The squared distance between the :class:`PDF` objects.
+        :return: The distance between the :class:`PDF` objects.
         :rtype: float
         :raises `XAxisException`: If the r ranges of the  PDFs are not equal.
         """
@@ -172,7 +172,7 @@ class PDF:
         else:
             raise XAxisException(self.r, other.r)
 
-    def scale_to_pdf(self, other: 'PDF', start: Optional[float], end: Optional[float]):
+    def scale_to_pdf(self, other: 'PDF', start: Optional[float] = None, end: Optional[float] = None):
         """Scales the :class:`PDF` object to best approximate another :class:`PDF` object. This is done by minimizing
         the squared distance between the PDFs. Raises a class:`XAxisException`, if the r ranges of the PDFs are not
         equal.
@@ -187,7 +187,7 @@ class PDF:
         """
 
         def _distance_with_factor(factor: float, x: np.ndarray, y: np.ndarray) -> float:
-            dist_array = factor * x - y
+            dist_array: np.ndarray = factor * x - y
             dist_array = np.square(dist_array)
             dist_sq: float = np.sum(dist_array)
             return dist_sq
