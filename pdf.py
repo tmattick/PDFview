@@ -41,7 +41,7 @@ class PDF:
     :raises `ValueError`: If `r` and `g` are of differing lengths.
     """
 
-    def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF"):
+    def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF", scaling_factor: float = 1):
         if not isinstance(r, np.ndarray):
             r = np.array(r)
         if not isinstance(g, np.ndarray):
@@ -60,7 +60,7 @@ class PDF:
             raise ValueError(
                 f"r and g arrays have to be of equal length. Length of r: {len(r)}, length of g: {len(g)}.")
         self.name = name
-        self.scaling_factor: float = 1
+        self.scaling_factor = scaling_factor
 
     def add_point_linear(self, x: float):
         """Add a point to the `PDF` by taking the neighboring points on each side and extrapolating them linearly.
