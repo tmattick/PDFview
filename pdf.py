@@ -486,9 +486,6 @@ class PDF:
         """
         return not self == other
 
-    def __str__(self) -> str:
-        return self.name
-
     def __add__(self, other: 'PDF') -> 'PDF':
         """Returns a :class:`PDF` object with the same r values as the provided :class:`PDF` objects, g values are the
         sum of the provided g values. `name` is '`self.name` + `other.name`'. Raises a `XAxisException` if r values are
@@ -562,6 +559,14 @@ class PDF:
         :rtype: int
         """
         return self.r.size
+
+    def __str__(self) -> str:
+        s = f"PDF {self.name}: {len(self)} data points, scaled to {self.scaling_factor}."
+        return s
+
+    def __repr__(self) -> str:
+        s = f"PDF(r={np.array2string(self.r, separator=',')}, g={np.array2string(self.g, separator=',')}, name='{self.name}', scaling_factor={self.scaling_factor})"
+        return s
 
     def _get_rmin_index(self, r_min: float) -> int:
         """Gets the index of the smallest value in `self.r` where r >= `r_min`.

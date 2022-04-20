@@ -392,3 +392,17 @@ def test_find_minima():
     test_pdf = PDF([1, 2, 3, 4, 5, 6], [0, 1, -1, 5, 4, 7])
     minima = test_pdf.find_minima()
     assert minima == [(3, -1), (5, 4)]
+
+
+def test_str():
+    """Test __str__ method.
+    """
+    test_pdf = PDF([1, 2, 3, 4, 5, 6], [0, 1, -1, 5, 4, 7], "test_pdf")
+    assert str(test_pdf) == "PDF test_pdf: 6 data points, scaled to 1."
+
+
+def test_repr():
+    """Test __repr__ method.
+    """
+    test_pdf = PDF([1, 2, 3, 4, 5, 6], [0, 1, -1, 5, 4, 7], "test_pdf")
+    assert repr(test_pdf) == "PDF(r=[1,2,3,4,5,6], g=[ 0, 1,-1, 5, 4, 7], name='test_pdf', scaling_factor=1)"
