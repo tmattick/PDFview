@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 import json
+import os.path
+import sys
 from typing import List, Optional, Tuple
 import zlib
 
@@ -32,7 +34,13 @@ class Window(ABC):
     @abstractmethod
     def __init__(self, layout: List[List[sg.Element]], title: str, finalize: bool = True, resizable: bool = False):
         self.layout = layout
-        self.window = sg.Window(title, layout=layout, finalize=finalize, resizable=resizable)
+        # icon by Font Awesome (https://fontawesome.com/icons/chart-line?s=solid); CC BY 4.0
+        try:
+            icon_path: str = os.path.join(sys._MEIPASS, "chart_line.ico")
+        except AttributeError:
+            icon_path: str = "chart_line.ico"
+        self.window = sg.Window(title, layout=layout, finalize=finalize, resizable=resizable,
+                                icon=icon_path)
 
     @abstractmethod
     def run(self) -> Optional[PDF]:
