@@ -202,6 +202,7 @@ class MainWindow(Window):
             return
         pdf_to_scale.scale(factor)
         self._draw_new_plot()
+        self.window["-PDF_LIST-"].update(self.pdfs)
 
     def _fit_to_pdf(self):
         """Method for scaling :class:`PDF` objects to another :class:`PDF` object. Opens a :class:`FitWindow` object
@@ -210,6 +211,7 @@ class MainWindow(Window):
         fit_window = FitWindow(self.pdfs, self.values["-PDF_LIST-"][0])
         fit_window.run()
         self._draw_new_plot()
+        self.window["-PDF_LIST-"].update(self.pdfs)
 
     def _display_extrema(self, maxima: bool):
         """Finds all extrema of the specified type (maxima if maxima is True, else minima) and displays them in a
