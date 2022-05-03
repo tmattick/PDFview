@@ -2,7 +2,7 @@ import json
 import math
 import os
 import re
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -308,8 +308,8 @@ class PDF:
         return pdf1 - pdf2
 
     @staticmethod
-    def read_from_file(path: str, name: Optional[str] = None, file_ext: Optional[str] = None) -> Tuple['PDF'] | Tuple[
-        'PDF', 'PDF']:
+    def read_from_file(path: str, name: Optional[str] = None, file_ext: Optional[str] = None) -> Union[
+        Tuple['PDF'], Tuple['PDF', 'PDF']]:
         """Creates a :class:`PDF` object from a given file. Can parse .gr-, .cgr- and .fgr-files and any other format
         consisting of (r g) tuples in rows. Floats have to use a "." as decimal seperator. Parses the given file via
         the method described by the file_ext, gets the file extension from the file otherwise. Gives the PDF the name
