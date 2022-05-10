@@ -41,6 +41,8 @@ class PDF:
     :raises `ValueError`: If `r` and `g` are of differing lengths.
     """
 
+    __slots__ = "r", "g", "name", "scaling_factor"
+
     def __init__(self, r: npt.ArrayLike, g: npt.ArrayLike, name: str = "exPDF", scaling_factor: float = 1):
         if not isinstance(r, np.ndarray):
             r = np.array(r)

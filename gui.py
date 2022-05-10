@@ -55,6 +55,8 @@ class MainWindow(Window):
     """The main window of the PDFview application. Inherits from :class:`Window`.
     """
 
+    __slots__ = "pdfs", "selected_pdf", "event", "mouse_x", "mouse_y", "layout", "window"
+
     def __init__(self):
         self.pdfs: List[PDF] = []
         self.selected_pdf: Optional[PDF] = None
@@ -343,6 +345,8 @@ class DiffWindow(Window):
     :type pdfs: List[PDF]
     """
 
+    __slots__ = "layout", "window"
+
     def __init__(self, pdfs: List[PDF]):
         layout = [[sg.Listbox(values=pdfs, enable_events=True, size=(20, 5), key="-PDF_MINUENDS-"),
                    sg.Text(" - "),
@@ -388,6 +392,8 @@ class FitWindow(Window):
     :param pdf_to_fit: the PDF to fit.
     :type pdf_to_fit: :class:``PDF``
     """
+
+    __slots__ = "pdf_to_fit", "layout", "window"
 
     def __init__(self, pdfs: List[PDF], pdf_to_fit: PDF):
         self.pdf_to_fit: PDF = pdf_to_fit
