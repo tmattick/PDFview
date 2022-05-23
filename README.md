@@ -2,7 +2,7 @@
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tmattick/PDFview?sort=semver) ![GitHub last commit](https://img.shields.io/github/last-commit/tmattick/PDFview) ![GitHub top language](https://img.shields.io/github/languages/top/tmattick/PDFview)
 
 PDFview is a GUI application for visualizing and working with pair distribution functions (PDFs). Functionalities include plotting, scaling, calculating differential PDFs (dPDFs) and fast determination of local extrema. PDFview is made to work with files created either with [PDFgetX3](https://www.diffpy.org/products/pdfgetx.html) or [PDFgui](https://www.diffpy.org/products/pdfgui.html). However, there is a fallback mode for unknown files that should be able to analyze any plain text file containing columns of x, y pairs seperated by one or more spaces. 
-The whole application is part of a master's thesis.
+The entire application is part of a master's thesis.
 
 ## Installation
 
